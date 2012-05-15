@@ -1,0 +1,7 @@
+int: f;
+int: l;
+f = 97;
+l = 43;
+f <=> l;
+print f;
+print l;
