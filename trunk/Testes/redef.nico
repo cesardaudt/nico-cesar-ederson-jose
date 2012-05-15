@@ -1,0 +1,10 @@
+int: x;
+int: y;
+int: z;
+int: z;
+y = 2;
+x = 90;
+z = 57;
+print x;
+print y;
+print z;

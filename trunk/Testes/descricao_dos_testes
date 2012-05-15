@@ -1,0 +1,12 @@
+test.nico: nao contem erro
+meuteste2.nico: var c não definida
+meuteste3.nico: redefine uma variavel
+meuteste4.nico: nao contem erro (teste de expressoes aritmeticas)
+meuteste5.nico:	utiliza uma variavel nao declarada no print
+syntax_err.nico: contem erro de sintaxe, que no frigir dos ovos, eh detectado como erro semantico pelo nosso programa como undefined symbol
+undef_symbol.nico: utiliza um identificador nao declarado
+undef_symbol2.nico: utiliza um identificador nao declarado
+redef.nico: redefine uma variavel (int:z;)
+redef2.nico: redefine uma variavel (int:y;)
+swap.nico: realiza swap
+swap2.nico swap

@@ -1,0 +1,8 @@
+int: g;
+int: j, k, l, f, a, c, e, r;
+g = 7;
+j = 4;
+k = 86;
+p = 1;
+print j;
+print g;
