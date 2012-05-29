@@ -21,7 +21,7 @@ void yyerror(char* s) {
 
 int main(int argc, char* argv[]) {
     if (argc != 4) {
-        printf("uso: %s -o <src.nico> <output.tac>. Try again!\n", argv[0]);
+        printf("uso: %s -o <output.tac>  <src.nico>. Try again!\n", argv[0]);
         exit(-1);
     }
     
@@ -35,8 +35,8 @@ int main(int argc, char* argv[]) {
     yyin = fopen(argv[3], "r");
     
     if (!yyin) {
-        printf("uso: %s -o <src.nico> <output.tac>. Could not find %s.\n", 
-        argv[0], argv[2]);
+        printf("uso: %s -o <output.tac> <src.nico>. Could not find %s.\n", 
+        argv[0], argv[3]);
         exit(-1);
     }
 
