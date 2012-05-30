@@ -23,68 +23,64 @@ typedef int Node_type;
 /* Serie de constantes que servirao para definir tipos de nos (na arvore). 
  * Essa serie pode ser completada ou alterada a vontade.
  */
-#define acoes_node		501
-#define add_node		502
-#define and_node		503
-#define attr_node		504
-#define chamaproc_node		505
-#define char_node		506
-#define code_node		507
-#define colon_node		508
-#define comando_node		509
-#define comma_node		510
-#define declaracao_node		511
-#define declaracoes_node	512
-#define div_node		513
-#define double_node		514
-#define else_node		515
-#define end_node		516
-#define enunciado_node		517
-#define eq_node			518
-#define expbool_node		519
-#define expr_node		520
-#define false_node		521
+#define acoes_node		        501
+#define add_node		        502
+#define and_node		        503
+#define attr_node		        504
+#define chamaproc_node		    505
+#define char_node		        506
+#define code_node		        507
+#define colon_node		        508
+#define comando_node		    509
+#define comma_node		        510
+#define declaracao_node		    511
+#define declaracoes_node	    512
+#define div_node		        513
+#define double_node		        514
+#define else_node		        515
+#define end_node		        516
+#define enunciado_node		    517
+#define eq_node			        518
+#define expbool_node		    519
+#define expr_node		        520
+#define false_node		        521
 #define fiminstcontrole_node	522
-#define float_node		523
-#define ge_node			524
-#define gt_node			525
-#define idf_node		526
-#define if_node			527
-#define int_lit_node		528
-#define int_node		529
-#define l_chaves_node		530
-#define l_colchetes_node	531
-#define l_parenteses_node	532
-#define le_node			533
+#define float_node		        523
+#define ge_node			        524
+#define gt_node			        525
+#define idf_node		        526
+#define if_node			        527
+#define int_lit_node		    528
+#define int_node		        529
+#define l_chaves_node		    530
+#define l_colchetes_node	    531
+#define l_parenteses_node	    532
+#define le_node			        533
 #define listadeclaracao_node	534
-#define listadupla_node		535
-#define listaexpr_node		536
-#define lt_node			537
-#define lvalue_node		538
-#define mul_node		539
-#define ne_node			540
-#define not_node		541
-#define or_node			542
-#define r_chaves_node		543
-#define r_colchetes_node	544
-#define r_parenteses_node	545
-#define real_node		546
-#define semicolon_node		547
-#define sub_node		548
-#define swap_node		549
-#define then_node		550
-#define tipo_node		551
-#define tipolista_node		552
-#define tipounico_node		553
-#define true_node		554
-#define while_node		555
-#define print_node		556
-
-
-
+#define listadupla_node		    535
+#define listaexpr_node		    536
+#define lt_node			        537
+#define lvalue_node		        538
+#define mul_node		        539
+#define ne_node			        540
+#define not_node		        541
+#define or_node			        542
+#define r_chaves_node		    543
+#define r_colchetes_node	    544
+#define r_parenteses_node	    545
+#define real_node		        546
+#define semicolon_node		    547
+#define sub_node		        548
+#define swap_node		        549
+#define then_node		        550
+#define tipo_node		        551
+#define tipolista_node		    552
+#define tipounico_node		    553
+#define true_node		        554
+#define while_node		        555
+#define print_node		        556
 
 /** Estrutura de dados parcial para o no da arvore. */
-
 
 typedef struct _node {
    int line_num;   /**< numero de linha. */
@@ -100,7 +96,6 @@ typedef struct _node {
 } Node;
 
 extern Node * syntax_tree;
-
 
 /**
  *  * Node constructor.

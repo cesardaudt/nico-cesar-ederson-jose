@@ -52,9 +52,9 @@ int main(int argc, char* argv[]) {
 
     outfile = fopen(argv[2],"w");
 	//print_table(symbol_table);
-	print_tac(outfile,syntax_tree->code);
+/*	print_tac(outfile,syntax_tree->code);*/
 
-/*    uncompile(outfile,syntax_tree);*/
+    uncompile(outfile,syntax_tree);
     
     fclose(outfile);
     //deep_free_node(syntax_tree);
