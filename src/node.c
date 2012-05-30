@@ -4,12 +4,7 @@
 #include <stdarg.h>
 #include "node.h"
 
-int max(int x,int y) {
-	if(x>y)
-		return x;
-	else
-		return y;
-}
+#define max(x, y) (((x)>(y)) ? (x) : (y))
 
 Node * syntax_tree;
 
@@ -51,7 +46,6 @@ NULL_TERMINATED Node* create_node(int nl, Node_type t, char* lexeme, /* Node* ch
 	/*attribute; Qualquer coisa por enquanto. */
 	
 	/* parte que preenche a lista de filhos */
-	
 
     va_list ap;
     va_start(ap, lexeme);
@@ -66,15 +60,6 @@ NULL_TERMINATED Node* create_node(int nl, Node_type t, char* lexeme, /* Node* ch
     new_node->n_children = n_children;
     
     new_node->children = (Node **)malloc(sizeof(Node *)*(n_children+1));
-    
-   /* int i = 0;
-    for(i;i<=n_children;i++){
-    	new_node->children[i] = (Node *)(malloc(sizeof(Node*)));	// aloca de acordo com o tamanho da entrada 
-    	if(new_node->children[i] == NULL){
-			printf("Alocacao de memoria falhou\n");
-			exit(0);
-		}
-    }*/
     
     new_node->children[n_children] = NULL;
 	

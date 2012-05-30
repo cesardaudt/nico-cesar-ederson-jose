@@ -22,9 +22,9 @@
     #define DOUBLE_SIZE 8   
 
     typedef struct expr_attr {
-            struct node_tac *code;
-            char *local;
-            int size;
+        struct node_tac *code;
+        char *local;
+        int size;
     } EXPR_ATTR;
     
     extern symbol_t symbol_table;
@@ -48,37 +48,36 @@
         return ret;
     }
     
-    void theBookIsOnTheTable(char *lexeme){
-    	if(lookup(symbol_table, lexeme)){//testa se já existe uma entrada com esse nome na tabela
-					printf("Símbolo %s foi definido múltiplas vezes. \n", lexeme);
-					exit(0);
+    void theBookIsOnTheTable(char *lexeme) {
+        if(lookup(symbol_table, lexeme)){//testa se já existe uma entrada com esse nome na tabela
+			printf("Símbolo %s foi definido múltiplas vezes. \n", lexeme);
+			exit(0);
 
 	}
-	    else{
+	    else {
 		    entry_t* new_entry=(entry_t *) malloc(sizeof(entry_t));
-    //		printf("%s %d\n",lexeme,vars_size);
 		    new_entry->name = lexeme;
 		    new_entry->type = tipo_idf;
 		    new_entry->desloc = vars_size;
 
 		    switch(tipo_idf){
-		        	case INT_TYPE:		new_entry->size = INT_SIZE;
-						    vars_size += INT_SIZE;
-    //						printf("%s %d\n",lexeme,vars_size);
-						    break;
-		        	case DOUBLE_TYPE:	new_entry->size = DOUBLE_SIZE;
-						    vars_size += DOUBLE_SIZE;
-    //						printf("%s %d\n",lexeme,vars_size);
-						    break;
-		        	case REAL_TYPE:		new_entry->size = REAL_SIZE;
-						    vars_size += REAL_SIZE;
-    //						printf("%s %d\n",lexeme,vars_size);
-						    break;
-		        	case CHAR_TYPE:		new_entry->size = CHAR_SIZE;
-						    vars_size += CHAR_SIZE;
-    //						printf("%s %d\n",lexeme,vars_size);
+            	case INT_TYPE:		
+            	    new_entry->size = INT_SIZE;
+		            vars_size += INT_SIZE;
+		            break;
+            	case DOUBLE_TYPE:	
+            	    new_entry->size = DOUBLE_SIZE;
+			        vars_size += DOUBLE_SIZE;
+			        break;
+            	case REAL_TYPE:		
+            	    new_entry->size = REAL_SIZE;
+			        vars_size += REAL_SIZE;
+			        break;
+            	case CHAR_TYPE:		
+            	    new_entry->size = CHAR_SIZE;
+			        vars_size += CHAR_SIZE;
 		    }
-		    if(insert(&symbol_table, new_entry)){
+		    if(insert(&symbol_table, new_entry)) {
 			    printf("Ocorreu um erro ao alocar o simbolo %s na tabela de simbolos.\n",lexeme);
 			    exit(0);
 		    }
@@ -99,7 +98,6 @@
         sprintf(ret, "%03d(SP)", entrada->desloc);
         return ret;
     }      
-    
 %}
 
 %union {
@@ -195,17 +193,25 @@ listadeclaracao: IDF				        {	Node* n = create_node(@1.first_line, idf_node,
 
 tipo: tipounico {   $$ = $1;
 			        if(!strcmp($$->lexeme,"int"))
-				    tipo_idf = INT_TYPE;
+				        tipo_idf = INT_TYPE;
 			        if(!strcmp($$->lexeme,"double"))
-				    tipo_idf = DOUBLE_TYPE;
+				        tipo_idf = DOUBLE_TYPE;
 			        if(!strcmp($$->lexeme,"real"))
-				    tipo_idf = REAL_TYPE;
+				        tipo_idf = REAL_TYPE;
 			        if(!strcmp($$->lexeme,"char"))
-				    tipo_idf = CHAR_TYPE;
+				        tipo_idf = CHAR_TYPE;
     			    $$->type = tipo_node; }
     //TODO: REGRAS SEMANTICAS NAO CRIADAS NESSA ETAPA
-    | tipolista {  $$ = $1; 
-			/*$$->type = tipo_node;*/ }
+    | tipolista {   $$ = $1; 
+                    if(!strcmp($$->lexeme,"int"))
+			            tipo_idf = INT_TYPE;
+		            if(!strcmp($$->lexeme,"double"))
+			            tipo_idf = DOUBLE_TYPE;
+		            if(!strcmp($$->lexeme,"real"))
+			            tipo_idf = REAL_TYPE;
+		            if(!strcmp($$->lexeme,"char"))
+			            tipo_idf = CHAR_TYPE;
+			        $$->type = tipo_node; }
     ;
 
 tipounico: INT      {	Node* n = create_node(@1.first_line, int_node, "int", NULL);
@@ -217,24 +223,23 @@ tipounico: INT      {	Node* n = create_node(@1.first_line, int_node, "int", NULL
          | CHAR     {	Node* n = create_node(@1.first_line, char_node, "char", NULL);
 			            $$ = create_node(@1.first_line, tipounico_node, "char", n, NULL); }
          ;
-        //TODO: REGRAS SEMANTICAS NAO CRIADAS NESSA ETAPA
+        
 tipolista: INT '(' listadupla ')'       {   Node* n1 = create_node(@1.first_line, int_node, "int", NULL);
-
 						                    Node* n2 = create_node(@1.first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
-						                    $$ = create_node(@1.first_line, tipolista_node, NULL, n1, n2, $3, n4, NULL); }
+						                    $$ = create_node(@1.first_line, tipolista_node, "int", n1, n2, $3, n4, NULL); }
          | DOUBLE '(' listadupla ')'    {   Node* n1 = create_node(@1.first_line, double_node, "double", NULL);
 						                    Node* n2 = create_node(@1.first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
-						                    $$ = create_node(@1.first_line, tipolista_node, NULL, n1, n2, $3, n4, NULL); }
+						                    $$ = create_node(@1.first_line, tipolista_node, "double", n1, n2, $3, n4, NULL); }
          | REAL '(' listadupla ')'      {   Node* n1 = create_node(@1.first_line, real_node, "real", NULL);
 						                    Node* n2 = create_node(@1.first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
-						                    $$ = create_node(@1.first_line, tipolista_node, NULL, n1, n2, $3, n4, NULL); }
+						                    $$ = create_node(@1.first_line, tipolista_node, "real", n1, n2, $3, n4, NULL); }
          | CHAR '(' listadupla ')'      {   Node* n1 = create_node(@1.first_line, char_node, "char", NULL);
 						                    Node* n2 = create_node(@1.first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
-						                    $$ = create_node(@1.first_line, tipolista_node, NULL, n1, n2, $3, n4, NULL); }
+						                    $$ = create_node(@1.first_line, tipolista_node, "char", n1, n2, $3, n4, NULL); }
          ;
 
         //TODO: REGRAS SEMANTICAS NAO CRIADAS NESSA ETAPA
@@ -256,30 +261,26 @@ acoes: comando          {   $$ = $1;
              				cat_tac(&($$->code), &($2->code)); }
      ;
 
-comando: lvalue '=' expr ';'    {		Node* n2 = create_node(@1.first_line, attr_node, "=", NULL);
-                       					Node* n4 = create_node(@1.first_line, semicolon_node, ";", NULL);
-                       					$$ = create_node(@1.first_line, comando_node, NULL, $1, n2, $3, n4, NULL);
+comando: lvalue '=' expr ';'    {   Node* n2 = create_node(@1.first_line, attr_node, "=", NULL);
+                   					Node* n4 = create_node(@1.first_line, semicolon_node, ";", NULL);
+                   					$$ = create_node(@1.first_line, comando_node, NULL, $1, n2, $3, n4, NULL);
 
-	            						struct tac* new_tac = create_inst_tac($1->lexeme,$3->lexeme,"","");
-          			        			cat_tac(&($$->code), &($3->code));
-			           			        append_inst_tac(&($$->code),new_tac); }
-       | lvalue SWAP lvalue ';' {       Node* n2 = create_node(@1.first_line, swap_node, "<=>", NULL);
-                       					Node* n4 = create_node(@1.first_line, semicolon_node, ";", NULL);
-                       					$$ = create_node(@1.first_line, comando_node, NULL, $1, n2, $3, n4, NULL); 
-                   					
-                       					char * temp = gera_temp(INT_TYPE);
-                       					struct tac* new_tac1 = create_inst_tac(temp,$1->lexeme,"","");
-                       					struct tac* new_tac2 = create_inst_tac($1->lexeme,$3->lexeme,"","");
-                       					struct tac* new_tac3 = create_inst_tac($3->lexeme,temp,"","");
+            						struct tac* new_tac = create_inst_tac($1->lexeme,$3->lexeme,"","");
+      			        			cat_tac(&($$->code), &($3->code));
+		           			        append_inst_tac(&($$->code),new_tac); }
+       | lvalue SWAP lvalue ';' {   Node* n2 = create_node(@1.first_line, swap_node, "<=>", NULL);
+                   					Node* n4 = create_node(@1.first_line, semicolon_node, ";", NULL);
+                   					$$ = create_node(@1.first_line, comando_node, NULL, $1, n2, $3, n4, NULL); 
+               					
+                   					char * temp = gera_temp(INT_TYPE);
+                   					struct tac* new_tac1 = create_inst_tac(temp,$1->lexeme,"","");
+                   					struct tac* new_tac2 = create_inst_tac($1->lexeme,$3->lexeme,"","");
+                   					struct tac* new_tac3 = create_inst_tac($3->lexeme,temp,"","");
                        					
-           			        			append_inst_tac(&($$->code),new_tac1);
-          			        			append_inst_tac(&($$->code),new_tac2);
-           			        			append_inst_tac(&($$->code),new_tac3); }
-       | expr ';'               /*{   Node* n = create_node(@1.first_line, semicolon_node, ";", NULL);
-				                    //$$ = create_node(@1.first_line, comando_node, $1, $1, n, NULL);
-				                    $$ = create_node(@1.first_line, comando_node, NULL, $1, n, NULL);  
-				                    $$->code = $1->code; }*/
-				                {   Node* n = create_node(@1.first_line, semicolon_node, ";", NULL);
+       			        			append_inst_tac(&($$->code),new_tac1);
+      			        			append_inst_tac(&($$->code),new_tac2);
+       			        			append_inst_tac(&($$->code),new_tac3); }
+       | expr ';'               {   Node* n = create_node(@1.first_line, semicolon_node, ";", NULL);
 				                    $$ = create_node(@1.first_line, comando_node, $1->lexeme, $1, n, NULL);
 				                    cat_tac(&($$->code), &($1->code)); }
        | enunciado              {	$$ = $1; 
@@ -301,8 +302,6 @@ lvalue: IDF                     {   char *temp = consulta_tabela($1);
 				                    else {
 						                printf("UNDEFINED SYMBOL. A variavel %s nao foi declarada.\n", $1);
 							            return( UNDEFINED_SYMBOL_ERROR );
-							            //exit(0);
-							            //VER ISSO NA ENTREVISTA (PROGRAMA SEGUE EXECUTANDO -> FOI CORRIGIDO NA MAIN ABORTANDO O PROGRAMA CASO O ANALISADOR SINTÁTICO RETORNE ERROR)
 				                    } }
         //TODO: REGRAS SEMANTICAS NAO CRIADAS NESSA ETAPA
       | IDF '[' listaexpr ']'	{   Node* n1 = create_node(@1.first_line, idf_node, $1, NULL);
@@ -317,7 +316,6 @@ listaexpr: expr                 { 	$$ = $1; }
          ;
 
 expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
-       			        //TODO: INSERIR AQUI UM IF PARA CONSIDERAR O CASO DE FLOAT_TYPE (PRÓX. ETAPA)
        			        $$ = create_node(@1.first_line, expr_node, gera_temp(INT_TYPE), $1, n, $3, NULL);
 				
        			        struct tac* new_tac = create_inst_tac($$->lexeme,$1->lexeme,"ADD",$3->lexeme);
@@ -325,7 +323,6 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
        			        cat_tac(&($$->code), &($3->code));
        			        append_inst_tac(&($$->code),new_tac); }
     | expr '-' expr {	Node* n = create_node(@1.first_line, sub_node, "-", NULL);
-       			        //TODO: INSERIR AQUI UM IF PARA CONSIDERAR O CASO DE FLOAT_TYPE (PRÓX. ETAPA)
       			        $$ = create_node(@1.first_line, expr_node, gera_temp(INT_TYPE), $1, n, $3, NULL); 
 
        			        struct tac* new_tac = create_inst_tac($$->lexeme,$1->lexeme,"SUB",$3->lexeme);
@@ -333,7 +330,6 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
       			        cat_tac(&($$->code), &($3->code));
        			        append_inst_tac(&($$->code),new_tac); }
     | expr '*' expr {	Node* n = create_node(@1.first_line, mul_node, "*", NULL);
-       			        //TODO: INSERIR AQUI UM IF PARA CONSIDERAR O CASO DE FLOAT_TYPE (PRÓX. ETAPA)
        			        $$ = create_node(@1.first_line, expr_node, gera_temp(INT_TYPE), $1, n, $3, NULL); 
 				
 				        struct tac* new_tac = create_inst_tac($$->lexeme,$1->lexeme,"MUL",$3->lexeme);
@@ -341,7 +337,6 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
        			        cat_tac(&($$->code), &($3->code));
        			        append_inst_tac(&($$->code),new_tac); }
     | expr '/' expr {	Node* n = create_node(@1.first_line, div_node, "/", NULL);
-       			        //TODO: INSERIR AQUI UM IF PARA CONSIDERAR O CASO DE FLOAT_TYPE (PRÓX. ETAPA)
        			        $$ = create_node(@1.first_line, expr_node, gera_temp(INT_TYPE), $1, n, $3, NULL); 
    			        
        			        struct tac* new_tac = create_inst_tac($$->lexeme,$1->lexeme,"DIV",$3->lexeme);
