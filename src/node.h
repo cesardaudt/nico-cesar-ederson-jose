@@ -91,8 +91,10 @@ typedef struct _node {
    struct _node** children;	/* Lista de ponteiros para os filhos do nodo, dinamicamente alocada na criacao */
    
    struct node_tac * code;
-   
-   
+   char* deslocamento;
+   char* array;
+   int ndim;
+
 } Node;
 
 extern Node * syntax_tree;
