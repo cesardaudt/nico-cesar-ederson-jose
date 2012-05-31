@@ -22,9 +22,10 @@
     #define DOUBLE_SIZE 8   
     
     extern symbol_t symbol_table;
-    int tipo_idf = 0;
-    int vars_size = 0;
-    int temps_size = 0;
+    int tipo_idf = 0;   //indicates the type of the current idf being analyzed (helps when we have multiple idfs)
+    int elems_idf = 1;  //indicates how many elems are being declared in the current idf (helps when we have n-dimensional arrays)
+    int vars_size = 0;  //size of all nico program vars
+    int temps_size = 0; //size of all nico program temps
     
     char* gera_temp(int type) {
         int size = 0;
@@ -56,20 +57,20 @@
 
 		    switch(tipo_idf){
             	case INT_TYPE:		
-            	    new_entry->size = INT_SIZE;
-		            vars_size += INT_SIZE;
+            	    new_entry->size = INT_SIZE * elems_idf;
+		            vars_size += INT_SIZE * elems_idf;
 		            break;
             	case DOUBLE_TYPE:	
-            	    new_entry->size = DOUBLE_SIZE;
-			        vars_size += DOUBLE_SIZE;
+            	    new_entry->size = DOUBLE_SIZE * elems_idf;
+			        vars_size += DOUBLE_SIZE * elems_idf;
 			        break;
             	case REAL_TYPE:		
-            	    new_entry->size = REAL_SIZE;
-			        vars_size += REAL_SIZE;
+            	    new_entry->size = REAL_SIZE * elems_idf;
+			        vars_size += REAL_SIZE * elems_idf;
 			        break;
             	case CHAR_TYPE:		
-            	    new_entry->size = CHAR_SIZE;
-			        vars_size += CHAR_SIZE;
+            	    new_entry->size = CHAR_SIZE * elems_idf;
+			        vars_size += CHAR_SIZE * elems_idf;
 		    }
 		    if(insert(&symbol_table, new_entry)) {
 			    printf("Ocorreu um erro ao alocar o simbolo %s na tabela de simbolos.\n",lexeme);
@@ -91,7 +92,22 @@
         char *ret = malloc(sizeof(char)*8);
         sprintf(ret, "%03d(SP)", entrada->desloc);
         return ret;
-    }      
+    }
+    
+    int foo_c(char* array) {
+        int res;
+        return res;
+    }
+    
+    int foo_largura(char* array) {
+        int res;
+        return res;    
+    }
+    
+    int foo_limite(char* array, int dim) {
+        int res;
+        return res;    
+    }
 %}
 
 %union {
@@ -195,7 +211,6 @@ tipo: tipounico {   $$ = $1;
 			        if(!strcmp($$->lexeme,"char"))
 				        tipo_idf = CHAR_TYPE;
     			    $$->type = tipo_node; }
-    //TODO: REGRAS SEMANTICAS NAO CRIADAS NESSA ETAPA
     | tipolista {   $$ = $1; 
                     if(!strcmp($$->lexeme,"int"))
 			            tipo_idf = INT_TYPE;
@@ -236,16 +251,21 @@ tipolista: INT '(' listadupla ')'       {   Node* n1 = create_node(@1.first_line
 						                    $$ = create_node(@1.first_line, tipolista_node, "char", n1, n2, $3, n4, NULL); }
          ;
 
-        //TODO: REGRAS SEMANTICAS NAO CRIADAS NESSA ETAPA
 listadupla: INT_LIT ':' INT_LIT                 {	Node* n1 = create_node(@1.first_line, int_lit_node, $1, NULL);
                               						Node* n2 = create_node(@1.first_line, colon_node, ":", NULL);
                               						Node* n3 = create_node(@1.first_line, int_lit_node, $3, NULL);
-                              						$$ = create_node(@1.first_line, listadupla_node, NULL, n1, n2, n3, NULL); }
+                              						$$ = create_node(@1.first_line, listadupla_node, NULL, n1, n2, n3, NULL); 
+                              						elems_idf = elems_idf * (atoi($3) - atoi($1) + 1);
+                              						//TODO: check wether up_limit >= low_limit and both > 0
+                              						}
           | INT_LIT ':' INT_LIT ',' listadupla	{	Node* n1 = create_node(@1.first_line, int_lit_node, $1, NULL);
                               						Node* n2 = create_node(@1.first_line, colon_node, ":", NULL);
                               						Node* n3 = create_node(@1.first_line, int_lit_node, $3, NULL);
                               						Node* n4 = create_node(@1.first_line, comma_node, ",", NULL);
-                              						$$ = create_node(@1.first_line, listadupla_node, NULL, n1, n2, n3, n4, $5, NULL); }
+                              						$$ = create_node(@1.first_line, listadupla_node, NULL, n1, n2, n3, n4, $5, NULL);
+                              						elems_idf = elems_idf * (atoi($3) - atoi($1) + 1); 
+                              						//TODO: check wether up_limit >= low_limit and both > 0
+                              						}
           ;
 
 acoes: comando          {   $$ = $1; 
@@ -414,6 +434,7 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
        			            strcat(op2, $1->deslocamento);
        			            strcat(op2, ")");
     			            struct tac* new_tac = create_inst_tac($$->lexeme,op2, "", "");
+    			            append_inst_tac(&($$->code),new_tac);
     			        }}
     //TODO: REGRAS SEMANTICAS NAO CRIADAS NESSA ETAPA
     | chamaproc     {   $$ = $1; 
