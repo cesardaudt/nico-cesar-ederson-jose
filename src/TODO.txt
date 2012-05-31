@@ -1,0 +1,11 @@
+arrays multidimensionais
+
+	declaracoes:
+		
+		podem ser declarados com indice iniciando em um valor diferente de zero
+	
+	acessos:
+		
+		manter a gramatica
+		
+		trocar a gramatica
