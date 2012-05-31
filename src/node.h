@@ -94,6 +94,8 @@ typedef struct _node {
    char* deslocamento;
    char* array;
    int ndim;
+   
+   int linf, lsup, n, c; //used in the c constant computation
 
 } Node;
 

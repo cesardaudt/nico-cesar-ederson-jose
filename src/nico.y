@@ -24,6 +24,9 @@
     extern symbol_t symbol_table;
     int tipo_idf = 0;   //indicates the type of the current idf being analyzed (helps when we have multiple idfs)
     int elems_idf = 1;  //indicates how many elems are being declared in the current idf (helps when we have n-dimensional arrays)
+//    int current_c = 0;  //
+//    int linf = 0;       //
+//    int current_n = 1;  //these vars help the computation of c constant of an array declaration (current n is n_i value and c is an accumulator)
     int vars_size = 0;  //size of all nico program vars
     int temps_size = 0; //size of all nico program temps
     
@@ -236,7 +239,8 @@ tipounico: INT      {	Node* n = create_node(@1.first_line, int_node, "int", NULL
 tipolista: INT '(' listadupla ')'       {   Node* n1 = create_node(@1.first_line, int_node, "int", NULL);
 						                    Node* n2 = create_node(@1.first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
-						                    $$ = create_node(@1.first_line, tipolista_node, "int", n1, n2, $3, n4, NULL); }
+						                    $$ = create_node(@1.first_line, tipolista_node, "int", n1, n2, $3, n4, NULL); 
+						                    $$->c = $$->c * INT_SIZE;}
          | DOUBLE '(' listadupla ')'    {   Node* n1 = create_node(@1.first_line, double_node, "double", NULL);
 						                    Node* n2 = create_node(@1.first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
@@ -256,6 +260,9 @@ listadupla: INT_LIT ':' INT_LIT                 {	Node* n1 = create_node(@1.firs
                               						Node* n3 = create_node(@1.first_line, int_lit_node, $3, NULL);
                               						$$ = create_node(@1.first_line, listadupla_node, NULL, n1, n2, n3, NULL); 
                               						elems_idf = elems_idf * (atoi($3) - atoi($1) + 1);
+                                                    $$->linf = atoi($1);
+                                                    $$->n = atoi($3) - atoi($1) + 1;
+                                                    $$->c = $$->linf;
                               						//TODO: check wether up_limit >= low_limit and both > 0
                               						}
           | INT_LIT ':' INT_LIT ',' listadupla	{	Node* n1 = create_node(@1.first_line, int_lit_node, $1, NULL);
@@ -264,6 +271,8 @@ listadupla: INT_LIT ':' INT_LIT                 {	Node* n1 = create_node(@1.firs
                               						Node* n4 = create_node(@1.first_line, comma_node, ",", NULL);
                               						$$ = create_node(@1.first_line, listadupla_node, NULL, n1, n2, n3, n4, $5, NULL);
                               						elems_idf = elems_idf * (atoi($3) - atoi($1) + 1); 
+                                                    $$->c = ($5->n * atoi($1))+ $5->c;
+                              						$$->n = (atoi($3) - atoi($1)+1) * $5->n;
                               						//TODO: check wether up_limit >= low_limit and both > 0
                               						}
           ;
