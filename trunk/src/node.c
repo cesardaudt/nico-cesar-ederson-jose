@@ -21,6 +21,9 @@ NULL_TERMINATED Node* create_node(int nl, Node_type t, char* lexeme, /* Node* ch
 	
 	new_node->code = NULL;
 	new_node->line_num = nl;
+	new_node->deslocamento = NULL;
+	new_node->array = NULL;
+	new_node->ndim = 0;
 
     int a = 0;	
 	if(lexeme != NULL) {
@@ -124,12 +127,11 @@ int deep_free_node(Node* n) {
 	if(n->children[0] != NULL)	/* se nao for folha, chama a funcao pra todos os filhos antes de liberar o seu proprio espaco alocado */
 	{
 		int i;
-		for(i = 0;i< n->n_children;i++)
-		{
+		for(i = 0;i< n->n_children;i++) {
 			deep_free_node(n->children[i]);
 		}
 	}
-	if(n->lexeme != NULL){
+	if(n->lexeme != NULL) {
 		free(n->lexeme);		/* libera a memoria alocada para o lexema */
 		n->lexeme = NULL;
 	}
@@ -151,20 +153,19 @@ int is_leaf(Node* n) {
 }
 
 
-void uncompile(FILE* outfile, Node *n){
+void uncompile(FILE* outfile, Node *n) {
 	//Imprime o valor dos lexemas de todos os nodos folha da esquerda para direita
 	if(n==NULL){
 		printf("Foi mandado imprimir um nodo nulo!!!\n");
 		exit(0);
 	}
-	if(n->n_children>0){
+	if(n->n_children>0) {
 		int i;
-		for(i=0;i<n->n_children;i++){
+		for(i=0;i<n->n_children;i++) {
 			uncompile(outfile,n->children[i]);
 		}
 	}
-	else
-	{
+	else {
 		fputs(n->lexeme, outfile);
 		/*Foi necessario inserir um espaço depois de cada lexema escrito, pois alguns problemas estavam acontecendo.
 
@@ -176,7 +177,8 @@ void uncompile(FILE* outfile, Node *n){
 		*/
 		fputs(" ", outfile);
 		//Caso o lexema seja um dos caracteres ";", "{", "}" ou "then" insere uma quebra de linha
-		if(!strcmp(n->lexeme,";") || !strcmp(n->lexeme,"{") || !strcmp(n->lexeme,"}") || !strcmp(n->lexeme,"then"))
+		if( !strcmp(n->lexeme,";") || !strcmp(n->lexeme,"{") || 
+		    !strcmp(n->lexeme,"}") || !strcmp(n->lexeme,"then"))
 			fputs("\n", outfile);
 	}
 }
