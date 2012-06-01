@@ -24,12 +24,12 @@
     extern symbol_t symbol_table;
     int tipo_idf = 0;   //indicates the type of the current idf being analyzed (helps when we have multiple idfs)
     int elems_idf = 1;  //indicates how many elems are being declared in the current idf (helps when we have n-dimensional arrays)
-//    int current_c = 0;  //
-//    int linf = 0;       //
-//    int current_n = 1;  //these vars help the computation of c constant of an array declaration (current n is n_i value and c is an accumulator)
+    void* extra_info;
+    int extra_info_pos = 1; //starts at second position because the first position stores the number of array dimensions
     int vars_size = 0;  //size of all nico program vars
     int temps_size = 0; //size of all nico program temps
     
+    //returns a temp var
     char* gera_temp(int type) {
         int size = 0;
         switch (type) {
@@ -46,6 +46,7 @@
         return ret;
     }
     
+    //checks wether the var "lexeme" is in the symbols table. If not, add it.
     void theBookIsOnTheTable(char *lexeme) {
         if(lookup(symbol_table, lexeme)){//testa se já existe uma entrada com esse nome na tabela
 			printf("Símbolo %s foi definido múltiplas vezes. \n", lexeme);
@@ -57,6 +58,16 @@
 		    new_entry->name = lexeme;
 		    new_entry->type = tipo_idf;
 		    new_entry->desloc = vars_size;
+		    
+		    if(new_entry->extra = malloc(sizeof(int)*(extra_info_pos+1))) {
+		        new_entry->extra = extra_info;
+		        //clear extra_info, extra_info_pos vars
+                free(extra_info);
+                extra_info_pos = 1;
+		    }
+		    
+		    else
+		        exit(0);
 
 		    switch(tipo_idf){
             	case INT_TYPE:		
@@ -75,6 +86,8 @@
             	    new_entry->size = CHAR_SIZE * elems_idf;
 			        vars_size += CHAR_SIZE * elems_idf;
 		    }
+		    //clear elems_idf var
+		    elems_idf = 1;
 		    if(insert(&symbol_table, new_entry)) {
 			    printf("Ocorreu um erro ao alocar o simbolo %s na tabela de simbolos.\n",lexeme);
 			    exit(0);
@@ -82,9 +95,8 @@
 	    }
     }
     
- /*
-    Essa funcao consulta a tabela atras de um identificador e retorna o conteudo para 
-    a string "local" caso o identificador esteja na tabela, caso contrario retorna o proprio identificador
+    /*
+    returns where "identificador" is allocated
     */
     char* consulta_tabela(char* identificador) {
         entry_t* entrada;
@@ -97,19 +109,40 @@
         return ret;
     }
     
+    //returns "array" c constant to calc one element position
     int foo_c(char* array) {
-        int res;
-        return res;
+        entry_t* entrada;
+        entrada = lookup(symbol_table, array);
+        if(entrada!=NULL) {
+            //first position of extra field contains the number of dimensions
+            int k = *((int*) (entrada->extra)); 
+            //in extra field, the (k-d+1)ith position contais the number of elements in the dth dimension
+            //the last position has the c value
+            return *(((int *)entrada->extra)+k+1);
+        }
+        else
+            exit(0);
     }
     
+    //returns "array" sizeof(one element)
+    //now we just have INT_TYPE arrays
     int foo_largura(char* array) {
-        int res;
-        return res;    
+        return INT_SIZE;
+        //TODO: implement with lookup
     }
     
+    //returns "array" number of elements in "dim" dimension
     int foo_limite(char* array, int dim) {
-        int res;
-        return res;    
+        entry_t* entrada;
+        entrada = lookup(symbol_table, array);
+        if(entrada!=NULL) {
+            //first position of extra field contains the number of dimensions
+            int k = *((int*) (entrada->extra)); 
+            //in extra field, the (k-d+1)ith position contais the number of elements in the dth dimension
+            return *(((int *)entrada->extra)+k-dim+1);
+        }
+        else
+            exit(0);
     }
 %}
 
@@ -240,7 +273,10 @@ tipolista: INT '(' listadupla ')'       {   Node* n1 = create_node(@1.first_line
 						                    Node* n2 = create_node(@1.first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
 						                    $$ = create_node(@1.first_line, tipolista_node, "int", n1, n2, $3, n4, NULL); 
-						                    $$->c = $$->c * INT_SIZE;}
+						                    int base = vars_size;
+						                    $$->c = base - ($$->c * INT_SIZE);
+						                    extra_info = realloc(extra_info, sizeof(int)*(extra_info_pos+1));
+                      						*(((int*)extra_info) + extra_info_pos) = $$->c; }
          | DOUBLE '(' listadupla ')'    {   Node* n1 = create_node(@1.first_line, double_node, "double", NULL);
 						                    Node* n2 = create_node(@1.first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
@@ -255,7 +291,8 @@ tipolista: INT '(' listadupla ')'       {   Node* n1 = create_node(@1.first_line
 						                    $$ = create_node(@1.first_line, tipolista_node, "char", n1, n2, $3, n4, NULL); }
          ;
 
-listadupla: INT_LIT ':' INT_LIT                 {	Node* n1 = create_node(@1.first_line, int_lit_node, $1, NULL);
+listadupla: INT_LIT ':' INT_LIT                 {	//TODO: check wether up_limit >= low_limit and both > 0
+                                                    Node* n1 = create_node(@1.first_line, int_lit_node, $1, NULL);
                               						Node* n2 = create_node(@1.first_line, colon_node, ":", NULL);
                               						Node* n3 = create_node(@1.first_line, int_lit_node, $3, NULL);
                               						$$ = create_node(@1.first_line, listadupla_node, NULL, n1, n2, n3, NULL); 
@@ -263,9 +300,14 @@ listadupla: INT_LIT ':' INT_LIT                 {	Node* n1 = create_node(@1.firs
                                                     $$->linf = atoi($1);
                                                     $$->n = atoi($3) - atoi($1) + 1;
                                                     $$->c = $$->linf;
-                              						//TODO: check wether up_limit >= low_limit and both > 0
-                              						}
-          | INT_LIT ':' INT_LIT ',' listadupla	{	Node* n1 = create_node(@1.first_line, int_lit_node, $1, NULL);
+                                                    
+                                                    //extra_info will be copied to array->extra (array is the var name in the symbols table)
+                              						extra_info = malloc(sizeof(int)*2);
+                              						*((int*)extra_info) = 1;                    //#dimensions is, at least, 1
+                              						*(((int*)extra_info)+extra_info_pos) = $$->n; //#elements at last dimension
+                              						extra_info_pos++; }
+          | INT_LIT ':' INT_LIT ',' listadupla	{	//TODO: check wether up_limit >= low_limit and both > 0
+                                                    Node* n1 = create_node(@1.first_line, int_lit_node, $1, NULL);
                               						Node* n2 = create_node(@1.first_line, colon_node, ":", NULL);
                               						Node* n3 = create_node(@1.first_line, int_lit_node, $3, NULL);
                               						Node* n4 = create_node(@1.first_line, comma_node, ",", NULL);
@@ -273,8 +315,12 @@ listadupla: INT_LIT ':' INT_LIT                 {	Node* n1 = create_node(@1.firs
                               						elems_idf = elems_idf * (atoi($3) - atoi($1) + 1); 
                                                     $$->c = ($5->n * atoi($1))+ $5->c;
                               						$$->n = (atoi($3) - atoi($1)+1) * $5->n;
-                              						//TODO: check wether up_limit >= low_limit and both > 0
-                              						}
+                              						
+                              						//inserts info in the next available position
+                              						extra_info = realloc(extra_info, sizeof(int)*(extra_info_pos+1));
+                              						*((int*)extra_info) += 1;                    //inc #dimensions
+                              						*(((int*)extra_info)+extra_info_pos) = atoi($3) - atoi($1) + 1; //#elements at last dimension
+                              						 extra_info_pos++; }
           ;
 
 acoes: comando          {   $$ = $1; 
@@ -366,7 +412,7 @@ listaexpr: IDF '[' expr {   char *temp = consulta_tabela($1);
 				                Node* n2 = create_node(@1.first_line, l_colchetes_node, "[", NULL);
                                 $$ = create_node(@1.first_line, listaexpr_node, NULL, $1, n2, $3, NULL);
                                 
-                                $$->array = temp;
+                                $$->array = $1;
                                 $$->lexeme = $3->lexeme;
                                 $$->ndim = 1;
 		                    }
