@@ -92,7 +92,9 @@ void print_tac(FILE* out, struct node_tac * code){
 void append_inst_tac(struct node_tac ** code, struct tac * inst){
 	struct node_tac * new_inst;
 	new_inst = (struct node_tac *) malloc(sizeof(struct node_tac)); 
-	if(new_inst == NULL) {printf("Alocacao de memoria falhou\n");exit(0);}
+	if(new_inst == NULL) {
+	    printf("Alocacao de memoria falhou\n");exit(0);
+    }
 	new_inst->inst = inst;
 	new_inst->next = NULL;
 	new_inst->number = tac_line+1;
@@ -102,9 +104,11 @@ void append_inst_tac(struct node_tac ** code, struct tac * inst){
 		new_inst->prev = NULL;
 	}
 	else{
+	    printf("else_in\n");
 		struct node_tac * tac_pointer;
 		tac_pointer=code[0];
 		while(tac_pointer->next){
+		    printf("malocou\n");
 			tac_pointer=tac_pointer->next;
 		}
 		tac_pointer->next = new_inst;

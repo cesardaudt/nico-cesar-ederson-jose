@@ -58,16 +58,22 @@
 		    new_entry->name = lexeme;
 		    new_entry->type = tipo_idf;
 		    new_entry->desloc = vars_size;
-		    
-		    if(new_entry->extra = malloc(sizeof(int)*(extra_info_pos+1))) {
-		        new_entry->extra = extra_info;
-		        //clear extra_info, extra_info_pos vars
-                free(extra_info);
-                extra_info_pos = 1;
+
+            //this code is just used in multi-dimensional arrays		    
+		    if(extra_info != NULL) {
+		        if(new_entry->extra = malloc(sizeof(int)*(extra_info_pos+1))) {
+		            int i;
+		            for(i=0; i <= *((int*)new_entry->extra)+1; i++) {
+		                *(((int*)new_entry->extra)+i) = *(((int*)extra_info)+i);
+		            }
+		            //clear extra_info, extra_info_pos vars
+                    free(extra_info);
+                    extra_info_pos = 1;
+		        }
+		        
+		        else
+		            exit(0);
 		    }
-		    
-		    else
-		        exit(0);
 
 		    switch(tipo_idf){
             	case INT_TYPE:		
@@ -139,7 +145,7 @@
             //first position of extra field contains the number of dimensions
             int k = *((int*) (entrada->extra)); 
             //in extra field, the (k-d+1)ith position contais the number of elements in the dth dimension
-            return *(((int *)entrada->extra)+k-dim+1);
+            return *(((int *)(entrada->extra))+k-dim+1);
         }
         else
             exit(0);
@@ -274,7 +280,7 @@ tipolista: INT '(' listadupla ')'       {   Node* n1 = create_node(@1.first_line
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
 						                    $$ = create_node(@1.first_line, tipolista_node, "int", n1, n2, $3, n4, NULL); 
 						                    int base = vars_size;
-						                    $$->c = base - ($$->c * INT_SIZE);
+						                    $$->c = base - ($3->c * INT_SIZE);
 						                    extra_info = realloc(extra_info, sizeof(int)*(extra_info_pos+1));
                       						*(((int*)extra_info) + extra_info_pos) = $$->c; }
          | DOUBLE '(' listadupla ')'    {   Node* n1 = create_node(@1.first_line, double_node, "double", NULL);
@@ -340,7 +346,7 @@ comando: lvalue '=' expr ';'    {   Node* n2 = create_node(@1.first_line, attr_n
 		           			            append_inst_tac(&($$->code),new_tac); 
 		           			        }
 		           			        else {
-		           			            char op1[100];
+		           			            char op1[17];
 		           			            strcat(op1, $1->lexeme);
                                         strcat(op1, "(");
 		           			            strcat(op1, $1->deslocamento);
@@ -348,8 +354,7 @@ comando: lvalue '=' expr ';'    {   Node* n2 = create_node(@1.first_line, attr_n
                                         struct tac* new_tac = create_inst_tac(op1,$3->lexeme,"","");
       			        			    cat_tac(&($$->code), &($3->code));
 		           			            append_inst_tac(&($$->code),new_tac); 
-		           			        }
-		           			        }
+		           			        } }
        | lvalue SWAP lvalue ';' {   Node* n2 = create_node(@1.first_line, swap_node, "<=>", NULL);
                    					Node* n4 = create_node(@1.first_line, semicolon_node, ";", NULL);
                    					$$ = create_node(@1.first_line, comando_node, NULL, $1, n2, $3, n4, NULL); 
@@ -372,7 +377,7 @@ comando: lvalue '=' expr ';'    {   Node* n2 = create_node(@1.first_line, attr_n
                    					$$ = create_node(@1.first_line, comando_node, NULL, n1, $2, n3, NULL);
                  					
                    					struct tac* new_tac = create_inst_tac("",$2->lexeme,"PRINT","");
-       			        			cat_tac(&($$->code), &($2->code));
+       			        			//cat_tac(&($$->code), &($2->code));
 			       			        append_inst_tac(&($$->code),new_tac); }
        ;
 
@@ -391,7 +396,6 @@ lvalue: IDF                     {   char *temp = consulta_tabela($1);
                                     
                                     $$->lexeme = gera_temp(INT_TYPE);
                                     $$->deslocamento = gera_temp(INT_TYPE);
-
                                     int c = foo_c($1->array);
                                     //sprintf(str,"%d",value) converts to decimal base.
                                     char c_str[100];
@@ -403,6 +407,7 @@ lvalue: IDF                     {   char *temp = consulta_tabela($1);
                                     char largura_str[100];
                                     sprintf(largura_str, "%d", largura);
                                     struct tac* new_tac2 = create_inst_tac($$->deslocamento,$1->lexeme,"MUL",largura_str);
+                                    cat_tac(&($$->code), &($1->code));
 			       			        append_inst_tac(&($$->code),new_tac1);
 			       			        append_inst_tac(&($$->code),new_tac2); }
       ;
@@ -415,6 +420,8 @@ listaexpr: IDF '[' expr {   char *temp = consulta_tabela($1);
                                 $$->array = $1;
                                 $$->lexeme = $3->lexeme;
                                 $$->ndim = 1;
+//                                cat_tac(&($$->code), &($3->code));
+                                $$->code = $3->code;
 		                    }
 		                    else {
 				                printf("UNDEFINED SYMBOL. A variavel %s nao foi declarada.\n", $1);
@@ -431,10 +438,11 @@ listaexpr: IDF '[' expr {   char *temp = consulta_tabela($1);
 		       		            	sprintf(limite_str, "%d", limite);
 		       		            	struct tac* new_tac1 = create_inst_tac(t,$1->lexeme,"MUL",limite_str);
 		       		            	struct tac* new_tac2 = create_inst_tac(t,t,"ADD",$3->lexeme);
-		       		            	$3->array = $1->array;
-		       		            	$3->lexeme = t;
-		       		            	$3->ndim = m;
+		       		            	$$->array = $1->array;
+		       		            	$$->lexeme = t;
+		       		            	$$->ndim = m;
 		       		            	cat_tac(&($$->code),&($3->code));
+		       		            	cat_tac(&($$->code),&($1->code));
 		       		            	append_inst_tac(&($$->code),new_tac1);
 		       		            	append_inst_tac(&($$->code),new_tac2); }
          ;
@@ -475,22 +483,26 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
     			        $$ = create_node(@1.first_line, expr_node, $1, n, NULL); }    
     | F_LIT         {   Node* n = create_node(@1.first_line, float_node, $1, NULL); 
     			        $$ = create_node(@1.first_line, expr_node, $1, n, NULL); }    			        
-    | lvalue        {   $$ = $1; 
-    			        $$->type = expr_node;
-    			        
-    			        if($1->deslocamento == NULL) {
+    | lvalue        {   if($1->deslocamento == NULL) {
     			            $$->lexeme = $1->lexeme;
     			        }
     			        else {
     			            $$->lexeme = gera_temp(INT_TYPE);
-    			            char op2[100];
+    			            char op2[17];
        			            strcat(op2, $1->lexeme);
+       			            printf("l.local: %s\n", $1->lexeme);
                             strcat(op2, "(");
        			            strcat(op2, $1->deslocamento);
+       			            printf("l.deslocamento: %s\n", $1->deslocamento);
        			            strcat(op2, ")");
+       			            printf("op2: %s\n", op2);
     			            struct tac* new_tac = create_inst_tac($$->lexeme,op2, "", "");
+    			            cat_tac(&($$->code), &($1->code));
     			            append_inst_tac(&($$->code),new_tac);
-    			        }}
+    			            printf("apendou\n");
+    			        }
+    			        $$ = $1; 
+    			        $$->type = expr_node; }
     //TODO: REGRAS SEMANTICAS NAO CRIADAS NESSA ETAPA
     | chamaproc     {   $$ = $1; 
     			        /*$$->type = expr_node;*/}
