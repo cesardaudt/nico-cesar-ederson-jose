@@ -93,12 +93,12 @@
     extern symbol_t symbol_table;
     int tipo_idf = 0;   //indicates the type of the current idf being analyzed (helps when we have multiple idfs)
     int elems_idf = 1;  //indicates how many elems are being declared in the current idf (helps when we have n-dimensional arrays)
-//    int current_c = 0;  //
-//    int linf = 0;       //
-//    int current_n = 1;  //these vars help the computation of c constant of an array declaration (current n is n_i value and c is an accumulator)
+    void* extra_info;
+    int extra_info_pos = 1; //starts at second position because the first position stores the number of array dimensions
     int vars_size = 0;  //size of all nico program vars
     int temps_size = 0; //size of all nico program temps
     
+    //returns a temp var
     char* gera_temp(int type) {
         int size = 0;
         switch (type) {
@@ -115,6 +115,7 @@
         return ret;
     }
     
+    //checks wether the var "lexeme" is in the symbols table. If not, add it.
     void theBookIsOnTheTable(char *lexeme) {
         if(lookup(symbol_table, lexeme)){//testa se já existe uma entrada com esse nome na tabela
 			printf("Símbolo %s foi definido múltiplas vezes. \n", lexeme);
@@ -126,6 +127,16 @@
 		    new_entry->name = lexeme;
 		    new_entry->type = tipo_idf;
 		    new_entry->desloc = vars_size;
+		    
+		    if(new_entry->extra = malloc(sizeof(int)*(extra_info_pos+1))) {
+		        new_entry->extra = extra_info;
+		        //clear extra_info, extra_info_pos vars
+                free(extra_info);
+                extra_info_pos = 1;
+		    }
+		    
+		    else
+		        exit(0);
 
 		    switch(tipo_idf){
             	case INT_TYPE:		
@@ -144,6 +155,8 @@
             	    new_entry->size = CHAR_SIZE * elems_idf;
 			        vars_size += CHAR_SIZE * elems_idf;
 		    }
+		    //clear elems_idf var
+		    elems_idf = 1;
 		    if(insert(&symbol_table, new_entry)) {
 			    printf("Ocorreu um erro ao alocar o simbolo %s na tabela de simbolos.\n",lexeme);
 			    exit(0);
@@ -151,9 +164,8 @@
 	    }
     }
     
- /*
-    Essa funcao consulta a tabela atras de um identificador e retorna o conteudo para 
-    a string "local" caso o identificador esteja na tabela, caso contrario retorna o proprio identificador
+    /*
+    returns where "identificador" is allocated
     */
     char* consulta_tabela(char* identificador) {
         entry_t* entrada;
@@ -166,24 +178,45 @@
         return ret;
     }
     
+    //returns "array" c constant to calc one element position
     int foo_c(char* array) {
-        int res;
-        return res;
+        entry_t* entrada;
+        entrada = lookup(symbol_table, array);
+        if(entrada!=NULL) {
+            //first position of extra field contains the number of dimensions
+            int k = *((int*) (entrada->extra)); 
+            //in extra field, the (k-d+1)ith position contais the number of elements in the dth dimension
+            //the last position has the c value
+            return *(((int *)entrada->extra)+k+1);
+        }
+        else
+            exit(0);
     }
     
+    //returns "array" sizeof(one element)
+    //now we just have INT_TYPE arrays
     int foo_largura(char* array) {
-        int res;
-        return res;    
+        return INT_SIZE;
+        //TODO: implement with lookup
     }
     
+    //returns "array" number of elements in "dim" dimension
     int foo_limite(char* array, int dim) {
-        int res;
-        return res;    
+        entry_t* entrada;
+        entrada = lookup(symbol_table, array);
+        if(entrada!=NULL) {
+            //first position of extra field contains the number of dimensions
+            int k = *((int*) (entrada->extra)); 
+            //in extra field, the (k-d+1)ith position contais the number of elements in the dth dimension
+            return *(((int *)entrada->extra)+k-dim+1);
+        }
+        else
+            exit(0);
     }
 
 
 /* Line 189 of yacc.c  */
-#line 187 "nico.tab.c"
+#line 220 "nico.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -249,7 +282,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 116 "nico.y"
+#line 149 "nico.y"
 
   char* cadeia;
   struct _node * no;
@@ -257,7 +290,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 261 "nico.tab.c"
+#line 294 "nico.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -282,7 +315,7 @@ typedef struct YYLTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 286 "nico.tab.c"
+#line 319 "nico.tab.c"
 
 #ifdef short
 # undef short
@@ -593,12 +626,12 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   180,   180,   183,   188,   190,   194,   198,   201,   207,
-     217,   229,   231,   233,   235,   239,   244,   248,   252,   258,
-     268,   280,   282,   287,   307,   319,   322,   324,   333,   343,
-     364,   377,   396,   403,   410,   417,   424,   428,   430,   432,
-     449,   454,   461,   466,   475,   477,   483,   485,   487,   490,
-     492,   494,   496,   498,   500,   502,   504,   506
+       0,   213,   213,   216,   221,   223,   227,   231,   234,   240,
+     250,   262,   264,   266,   268,   272,   280,   284,   288,   294,
+     309,   326,   328,   333,   353,   365,   368,   370,   379,   389,
+     410,   423,   442,   449,   456,   463,   470,   474,   476,   478,
+     495,   500,   507,   512,   521,   523,   529,   531,   533,   536,
+     538,   540,   542,   544,   546,   548,   550,   552
 };
 #endif
 
@@ -1626,7 +1659,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 180 "nico.y"
+#line 213 "nico.y"
     {   (yyval.no) = create_node((yylsp[(1) - (2)]).first_line, code_node, NULL, (yyvsp[(1) - (2)].no), (yyvsp[(2) - (2)].no), NULL);
 			                cat_tac(&((yyval.no)->code), &((yyvsp[(2) - (2)].no)->code));
                             syntax_tree = (yyval.no); ;}
@@ -1635,7 +1668,7 @@ yyreduce:
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 183 "nico.y"
+#line 216 "nico.y"
     {   (yyval.no) = (yyvsp[(1) - (1)].no);
             			    (yyval.no)->type = code_node; 
                             syntax_tree = (yyval.no); ;}
@@ -1644,7 +1677,7 @@ yyreduce:
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 188 "nico.y"
+#line 221 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (2)]).first_line, semicolon_node, ";", NULL);
 						                    (yyval.no) = create_node((yylsp[(1) - (2)]).first_line, declaracoes_node, NULL, (yyvsp[(1) - (2)].no), n, NULL); ;}
     break;
@@ -1652,7 +1685,7 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 190 "nico.y"
+#line 223 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (3)]).first_line, semicolon_node, ";", NULL);
            					                (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, declaracoes_node, NULL, (yyvsp[(1) - (3)].no), (yyvsp[(2) - (3)].no), n, NULL); ;}
     break;
@@ -1660,7 +1693,7 @@ yyreduce:
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 194 "nico.y"
+#line 227 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (3)]).first_line, colon_node, ":", NULL);
 			       			                (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, declaracao_node, NULL, (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); ;}
     break;
@@ -1668,7 +1701,7 @@ yyreduce:
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 198 "nico.y"
+#line 231 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (1)]).first_line, idf_node, (yyvsp[(1) - (1)].cadeia), NULL);
 							                    theBookIsOnTheTable((yyvsp[(1) - (1)].cadeia));
 							                    (yyval.no) = create_node((yylsp[(1) - (1)]).first_line, listadeclaracao_node, (yyvsp[(1) - (1)].cadeia), n, NULL);	;}
@@ -1677,7 +1710,7 @@ yyreduce:
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 201 "nico.y"
+#line 234 "nico.y"
     {	Node* n1 = create_node((yylsp[(1) - (3)]).first_line, idf_node, (yyvsp[(1) - (3)].cadeia), NULL);
 							                    Node* n2 = create_node((yylsp[(1) - (3)]).first_line, comma_node, ",", NULL);
 							                    theBookIsOnTheTable((yyvsp[(1) - (3)].cadeia));
@@ -1687,7 +1720,7 @@ yyreduce:
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 207 "nico.y"
+#line 240 "nico.y"
     {   (yyval.no) = (yyvsp[(1) - (1)].no);
 			        if(!strcmp((yyval.no)->lexeme,"int"))
 				        tipo_idf = INT_TYPE;
@@ -1703,7 +1736,7 @@ yyreduce:
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 217 "nico.y"
+#line 250 "nico.y"
     {   (yyval.no) = (yyvsp[(1) - (1)].no); 
                     if(!strcmp((yyval.no)->lexeme,"int"))
 			            tipo_idf = INT_TYPE;
@@ -1719,7 +1752,7 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 229 "nico.y"
+#line 262 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (1)]).first_line, int_node, "int", NULL);
 			            (yyval.no) = create_node((yylsp[(1) - (1)]).first_line, tipounico_node, "int", n, NULL); ;}
     break;
@@ -1727,7 +1760,7 @@ yyreduce:
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 231 "nico.y"
+#line 264 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (1)]).first_line, double_node, "double", NULL);
 			            (yyval.no) = create_node((yylsp[(1) - (1)]).first_line, tipounico_node, "double", n, NULL); ;}
     break;
@@ -1735,7 +1768,7 @@ yyreduce:
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 233 "nico.y"
+#line 266 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (1)]).first_line, real_node, "real", NULL);
 			            (yyval.no) = create_node((yylsp[(1) - (1)]).first_line, tipounico_node, "real", n, NULL); ;}
     break;
@@ -1743,7 +1776,7 @@ yyreduce:
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 235 "nico.y"
+#line 268 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (1)]).first_line, char_node, "char", NULL);
 			            (yyval.no) = create_node((yylsp[(1) - (1)]).first_line, tipounico_node, "char", n, NULL); ;}
     break;
@@ -1751,18 +1784,21 @@ yyreduce:
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 239 "nico.y"
+#line 272 "nico.y"
     {   Node* n1 = create_node((yylsp[(1) - (4)]).first_line, int_node, "int", NULL);
 						                    Node* n2 = create_node((yylsp[(1) - (4)]).first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node((yylsp[(1) - (4)]).first_line, r_parenteses_node, ")", NULL);
 						                    (yyval.no) = create_node((yylsp[(1) - (4)]).first_line, tipolista_node, "int", n1, n2, (yyvsp[(3) - (4)].no), n4, NULL); 
-						                    (yyval.no)->c = (yyval.no)->c * INT_SIZE;;}
+						                    int base = vars_size;
+						                    (yyval.no)->c = base - ((yyval.no)->c * INT_SIZE);
+						                    extra_info = realloc(extra_info, sizeof(int)*(extra_info_pos+1));
+                      						*(((int*)extra_info) + extra_info_pos) = (yyval.no)->c; ;}
     break;
 
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 244 "nico.y"
+#line 280 "nico.y"
     {   Node* n1 = create_node((yylsp[(1) - (4)]).first_line, double_node, "double", NULL);
 						                    Node* n2 = create_node((yylsp[(1) - (4)]).first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node((yylsp[(1) - (4)]).first_line, r_parenteses_node, ")", NULL);
@@ -1772,7 +1808,7 @@ yyreduce:
   case 17:
 
 /* Line 1455 of yacc.c  */
-#line 248 "nico.y"
+#line 284 "nico.y"
     {   Node* n1 = create_node((yylsp[(1) - (4)]).first_line, real_node, "real", NULL);
 						                    Node* n2 = create_node((yylsp[(1) - (4)]).first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node((yylsp[(1) - (4)]).first_line, r_parenteses_node, ")", NULL);
@@ -1782,7 +1818,7 @@ yyreduce:
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 252 "nico.y"
+#line 288 "nico.y"
     {   Node* n1 = create_node((yylsp[(1) - (4)]).first_line, char_node, "char", NULL);
 						                    Node* n2 = create_node((yylsp[(1) - (4)]).first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node((yylsp[(1) - (4)]).first_line, r_parenteses_node, ")", NULL);
@@ -1792,8 +1828,9 @@ yyreduce:
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 258 "nico.y"
-    {	Node* n1 = create_node((yylsp[(1) - (3)]).first_line, int_lit_node, (yyvsp[(1) - (3)].cadeia), NULL);
+#line 294 "nico.y"
+    {	//TODO: check wether up_limit >= low_limit and both > 0
+                                                    Node* n1 = create_node((yylsp[(1) - (3)]).first_line, int_lit_node, (yyvsp[(1) - (3)].cadeia), NULL);
                               						Node* n2 = create_node((yylsp[(1) - (3)]).first_line, colon_node, ":", NULL);
                               						Node* n3 = create_node((yylsp[(1) - (3)]).first_line, int_lit_node, (yyvsp[(3) - (3)].cadeia), NULL);
                               						(yyval.no) = create_node((yylsp[(1) - (3)]).first_line, listadupla_node, NULL, n1, n2, n3, NULL); 
@@ -1801,15 +1838,20 @@ yyreduce:
                                                     (yyval.no)->linf = atoi((yyvsp[(1) - (3)].cadeia));
                                                     (yyval.no)->n = atoi((yyvsp[(3) - (3)].cadeia)) - atoi((yyvsp[(1) - (3)].cadeia)) + 1;
                                                     (yyval.no)->c = (yyval.no)->linf;
-                              						//TODO: check wether up_limit >= low_limit and both > 0
-                              						;}
+                                                    
+                                                    //extra_info will be copied to array->extra (array is the var name in the symbols table)
+                              						extra_info = malloc(sizeof(int)*2);
+                              						*((int*)extra_info) = 1;                    //#dimensions is, at least, 1
+                              						*(((int*)extra_info)+extra_info_pos) = (yyval.no)->n; //#elements at last dimension
+                              						extra_info_pos++; ;}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 268 "nico.y"
-    {	Node* n1 = create_node((yylsp[(1) - (5)]).first_line, int_lit_node, (yyvsp[(1) - (5)].cadeia), NULL);
+#line 309 "nico.y"
+    {	//TODO: check wether up_limit >= low_limit and both > 0
+                                                    Node* n1 = create_node((yylsp[(1) - (5)]).first_line, int_lit_node, (yyvsp[(1) - (5)].cadeia), NULL);
                               						Node* n2 = create_node((yylsp[(1) - (5)]).first_line, colon_node, ":", NULL);
                               						Node* n3 = create_node((yylsp[(1) - (5)]).first_line, int_lit_node, (yyvsp[(3) - (5)].cadeia), NULL);
                               						Node* n4 = create_node((yylsp[(1) - (5)]).first_line, comma_node, ",", NULL);
@@ -1817,14 +1859,18 @@ yyreduce:
                               						elems_idf = elems_idf * (atoi((yyvsp[(3) - (5)].cadeia)) - atoi((yyvsp[(1) - (5)].cadeia)) + 1); 
                                                     (yyval.no)->c = ((yyvsp[(5) - (5)].no)->n * atoi((yyvsp[(1) - (5)].cadeia)))+ (yyvsp[(5) - (5)].no)->c;
                               						(yyval.no)->n = (atoi((yyvsp[(3) - (5)].cadeia)) - atoi((yyvsp[(1) - (5)].cadeia))+1) * (yyvsp[(5) - (5)].no)->n;
-                              						//TODO: check wether up_limit >= low_limit and both > 0
-                              						;}
+                              						
+                              						//inserts info in the next available position
+                              						extra_info = realloc(extra_info, sizeof(int)*(extra_info_pos+1));
+                              						*((int*)extra_info) += 1;                    //inc #dimensions
+                              						*(((int*)extra_info)+extra_info_pos) = atoi((yyvsp[(3) - (5)].cadeia)) - atoi((yyvsp[(1) - (5)].cadeia)) + 1; //#elements at last dimension
+                              						 extra_info_pos++; ;}
     break;
 
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 280 "nico.y"
+#line 326 "nico.y"
     {   (yyval.no) = (yyvsp[(1) - (1)].no); 
             				(yyval.no)->type = acoes_node;;}
     break;
@@ -1832,7 +1878,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 282 "nico.y"
+#line 328 "nico.y"
     {   (yyval.no) = create_node((yylsp[(1) - (2)]).first_line, acoes_node, NULL, (yyvsp[(1) - (2)].no), (yyvsp[(2) - (2)].no), NULL); 
              				cat_tac(&((yyval.no)->code), &((yyvsp[(1) - (2)].no)->code));
              				cat_tac(&((yyval.no)->code), &((yyvsp[(2) - (2)].no)->code)); ;}
@@ -1841,7 +1887,7 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 287 "nico.y"
+#line 333 "nico.y"
     {   Node* n2 = create_node((yylsp[(1) - (4)]).first_line, attr_node, "=", NULL);
                    					Node* n4 = create_node((yylsp[(1) - (4)]).first_line, semicolon_node, ";", NULL);
                    					(yyval.no) = create_node((yylsp[(1) - (4)]).first_line, comando_node, NULL, (yyvsp[(1) - (4)].no), n2, (yyvsp[(3) - (4)].no), n4, NULL);
@@ -1867,7 +1913,7 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 307 "nico.y"
+#line 353 "nico.y"
     {   Node* n2 = create_node((yylsp[(1) - (4)]).first_line, swap_node, "<=>", NULL);
                    					Node* n4 = create_node((yylsp[(1) - (4)]).first_line, semicolon_node, ";", NULL);
                    					(yyval.no) = create_node((yylsp[(1) - (4)]).first_line, comando_node, NULL, (yyvsp[(1) - (4)].no), n2, (yyvsp[(3) - (4)].no), n4, NULL); 
@@ -1885,7 +1931,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 319 "nico.y"
+#line 365 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (2)]).first_line, semicolon_node, ";", NULL);
 				                    (yyval.no) = create_node((yylsp[(1) - (2)]).first_line, comando_node, (yyvsp[(1) - (2)].no)->lexeme, (yyvsp[(1) - (2)].no), n, NULL);
 				                    cat_tac(&((yyval.no)->code), &((yyvsp[(1) - (2)].no)->code)); ;}
@@ -1894,7 +1940,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 322 "nico.y"
+#line 368 "nico.y"
     {	(yyval.no) = (yyvsp[(1) - (1)].no); 
                    					(yyval.no)->type=comando_node;;}
     break;
@@ -1902,7 +1948,7 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 324 "nico.y"
+#line 370 "nico.y"
     {	Node* n1 = create_node((yylsp[(1) - (3)]).first_line, print_node, "print", NULL);
                    					Node* n3 = create_node((yylsp[(1) - (3)]).first_line, semicolon_node, ";", NULL);
                    					(yyval.no) = create_node((yylsp[(1) - (3)]).first_line, comando_node, NULL, n1, (yyvsp[(2) - (3)].no), n3, NULL);
@@ -1915,7 +1961,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 333 "nico.y"
+#line 379 "nico.y"
     {   char *temp = consulta_tabela((yyvsp[(1) - (1)].cadeia));
 				                    if(temp) {
 						                Node* n = create_node((yylsp[(1) - (1)]).first_line, idf_node, (yyvsp[(1) - (1)].cadeia), NULL);
@@ -1931,7 +1977,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 343 "nico.y"
+#line 389 "nico.y"
     {   Node* n2 = create_node((yylsp[(1) - (2)]).first_line, r_colchetes_node, "]", NULL);
                                     (yyval.no) = create_node((yylsp[(1) - (2)]).first_line, lvalue_node, NULL, (yyvsp[(1) - (2)].no), n2, NULL);
                                     
@@ -1956,13 +2002,13 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 364 "nico.y"
+#line 410 "nico.y"
     {   char *temp = consulta_tabela((yyvsp[(1) - (3)].cadeia));
 		                    if(temp) {
 				                Node* n2 = create_node((yylsp[(1) - (3)]).first_line, l_colchetes_node, "[", NULL);
                                 (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, listaexpr_node, NULL, (yyvsp[(1) - (3)].cadeia), n2, (yyvsp[(3) - (3)].no), NULL);
                                 
-                                (yyval.no)->array = temp;
+                                (yyval.no)->array = (yyvsp[(1) - (3)].cadeia);
                                 (yyval.no)->lexeme = (yyvsp[(3) - (3)].no)->lexeme;
                                 (yyval.no)->ndim = 1;
 		                    }
@@ -1975,7 +2021,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 377 "nico.y"
+#line 423 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (3)]).first_line, comma_node, ",", NULL);
 		       		            	(yyval.no) = create_node((yylsp[(1) - (3)]).first_line, listaexpr_node, NULL, (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); 
 		       		            	
@@ -1998,7 +2044,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 396 "nico.y"
+#line 442 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (3)]).first_line, add_node, "+", NULL);
        			        (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expr_node, gera_temp(INT_TYPE), (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL);
 				
@@ -2011,7 +2057,7 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 403 "nico.y"
+#line 449 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (3)]).first_line, sub_node, "-", NULL);
       			        (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expr_node, gera_temp(INT_TYPE), (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); 
 
@@ -2024,7 +2070,7 @@ yyreduce:
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 410 "nico.y"
+#line 456 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (3)]).first_line, mul_node, "*", NULL);
        			        (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expr_node, gera_temp(INT_TYPE), (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); 
 				
@@ -2037,7 +2083,7 @@ yyreduce:
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 417 "nico.y"
+#line 463 "nico.y"
     {	Node* n = create_node((yylsp[(1) - (3)]).first_line, div_node, "/", NULL);
        			        (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expr_node, gera_temp(INT_TYPE), (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); 
    			        
@@ -2050,7 +2096,7 @@ yyreduce:
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 424 "nico.y"
+#line 470 "nico.y"
     {   Node* n1 = create_node((yylsp[(1) - (3)]).first_line, l_parenteses_node, "(", NULL);
                			Node* n3 = create_node((yylsp[(1) - (3)]).first_line, r_parenteses_node, ")", NULL);
                			(yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expr_node, (yyvsp[(2) - (3)].no)->lexeme, n1, (yyvsp[(2) - (3)].no), n3, NULL); 
@@ -2060,7 +2106,7 @@ yyreduce:
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 428 "nico.y"
+#line 474 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (1)]).first_line, int_lit_node, (yyvsp[(1) - (1)].cadeia), NULL); 
     			        (yyval.no) = create_node((yylsp[(1) - (1)]).first_line, expr_node, (yyvsp[(1) - (1)].cadeia), n, NULL); ;}
     break;
@@ -2068,7 +2114,7 @@ yyreduce:
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 430 "nico.y"
+#line 476 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (1)]).first_line, float_node, (yyvsp[(1) - (1)].cadeia), NULL); 
     			        (yyval.no) = create_node((yylsp[(1) - (1)]).first_line, expr_node, (yyvsp[(1) - (1)].cadeia), n, NULL); ;}
     break;
@@ -2076,7 +2122,7 @@ yyreduce:
   case 39:
 
 /* Line 1455 of yacc.c  */
-#line 432 "nico.y"
+#line 478 "nico.y"
     {   (yyval.no) = (yyvsp[(1) - (1)].no); 
     			        (yyval.no)->type = expr_node;
     			        
@@ -2098,7 +2144,7 @@ yyreduce:
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 449 "nico.y"
+#line 495 "nico.y"
     {   (yyval.no) = (yyvsp[(1) - (1)].no); 
     			        /*$$->type = expr_node;*/;}
     break;
@@ -2106,7 +2152,7 @@ yyreduce:
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 454 "nico.y"
+#line 500 "nico.y"
     {	Node* n1 = create_node((yylsp[(1) - (4)]).first_line, idf_node, (yyvsp[(1) - (4)].cadeia), NULL);
 					                    Node* n2 = create_node((yylsp[(1) - (4)]).first_line, l_parenteses_node, "(", NULL);
                        					Node* n4 = create_node((yylsp[(1) - (4)]).first_line, r_parenteses_node, ")", NULL);
@@ -2116,7 +2162,7 @@ yyreduce:
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 461 "nico.y"
+#line 507 "nico.y"
     {   Node* n1 = create_node((yylsp[(1) - (7)]).first_line, if_node, "if", NULL);
 									                            Node* n2 = create_node((yylsp[(1) - (7)]).first_line, l_parenteses_node, "(", NULL);
                                									Node* n4 = create_node((yylsp[(1) - (7)]).first_line, r_parenteses_node, ")", NULL);
@@ -2127,7 +2173,7 @@ yyreduce:
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 466 "nico.y"
+#line 512 "nico.y"
     {	Node* n1 = create_node((yylsp[(1) - (7)]).first_line, while_node, "while", NULL);
 									                            Node* n2 = create_node((yylsp[(1) - (7)]).first_line, l_parenteses_node, "(", NULL);
                                									Node* n4 = create_node((yylsp[(1) - (7)]).first_line, r_parenteses_node, ")", NULL);
@@ -2139,7 +2185,7 @@ yyreduce:
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 475 "nico.y"
+#line 521 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (1)]).first_line, end_node, "end", NULL);
 					                (yyval.no) = create_node((yylsp[(1) - (1)]).first_line, fiminstcontrole_node, NULL, n, NULL); ;}
     break;
@@ -2147,7 +2193,7 @@ yyreduce:
   case 45:
 
 /* Line 1455 of yacc.c  */
-#line 477 "nico.y"
+#line 523 "nico.y"
     {   Node* n1 = create_node((yylsp[(1) - (3)]).first_line, else_node, "else", NULL);
                        				Node* n3 = create_node((yylsp[(1) - (3)]).first_line, end_node, "end", NULL);
                        				(yyval.no) = create_node((yylsp[(1) - (3)]).first_line, fiminstcontrole_node, NULL, n1, (yyvsp[(2) - (3)].no), n3, NULL); ;}
@@ -2156,7 +2202,7 @@ yyreduce:
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 483 "nico.y"
+#line 529 "nico.y"
     {  	Node* n = create_node((yylsp[(1) - (1)]).first_line, true_node, "true", NULL);
 					                (yyval.no) = create_node((yylsp[(1) - (1)]).first_line, expbool_node, NULL, n, NULL); ;}
     break;
@@ -2164,7 +2210,7 @@ yyreduce:
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 485 "nico.y"
+#line 531 "nico.y"
     {  	Node* n = create_node((yylsp[(1) - (1)]).first_line, false_node, "false", NULL);
        					            (yyval.no) = create_node((yylsp[(1) - (1)]).first_line, expbool_node, NULL, n, NULL); ;}
     break;
@@ -2172,7 +2218,7 @@ yyreduce:
   case 48:
 
 /* Line 1455 of yacc.c  */
-#line 487 "nico.y"
+#line 533 "nico.y"
     {   Node* n1 = create_node((yylsp[(1) - (3)]).first_line, l_parenteses_node, "(", NULL);
                    					Node* n3 = create_node((yylsp[(1) - (3)]).first_line, r_parenteses_node, ")", NULL);
                    					(yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expbool_node, NULL, n1, (yyvsp[(2) - (3)].no), n3, NULL); ;}
@@ -2181,7 +2227,7 @@ yyreduce:
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 490 "nico.y"
+#line 536 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (3)]).first_line, and_node, "and", NULL);
        					            (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expbool_node, NULL, (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); ;}
     break;
@@ -2189,7 +2235,7 @@ yyreduce:
   case 50:
 
 /* Line 1455 of yacc.c  */
-#line 492 "nico.y"
+#line 538 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (3)]).first_line, or_node, "or", NULL);
        					            (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expbool_node, NULL, (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); ;}
     break;
@@ -2197,7 +2243,7 @@ yyreduce:
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 494 "nico.y"
+#line 540 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (2)]).first_line, not_node, (yyvsp[(1) - (2)].cadeia), NULL);
        					            (yyval.no) = create_node((yylsp[(1) - (2)]).first_line, expbool_node, NULL, n, (yyvsp[(2) - (2)].no), NULL); ;}
     break;
@@ -2205,7 +2251,7 @@ yyreduce:
   case 52:
 
 /* Line 1455 of yacc.c  */
-#line 496 "nico.y"
+#line 542 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (3)]).first_line, gt_node, ">", NULL);
        					            (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expbool_node, NULL, (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); ;}
     break;
@@ -2213,7 +2259,7 @@ yyreduce:
   case 53:
 
 /* Line 1455 of yacc.c  */
-#line 498 "nico.y"
+#line 544 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (3)]).first_line, lt_node, "<", NULL);
        					            (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expbool_node, NULL, (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); ;}
     break;
@@ -2221,7 +2267,7 @@ yyreduce:
   case 54:
 
 /* Line 1455 of yacc.c  */
-#line 500 "nico.y"
+#line 546 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (3)]).first_line, le_node, "<=", NULL);
        					            (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expbool_node, NULL, (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); ;}
     break;
@@ -2229,7 +2275,7 @@ yyreduce:
   case 55:
 
 /* Line 1455 of yacc.c  */
-#line 502 "nico.y"
+#line 548 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (3)]).first_line, ge_node, ">=", NULL);
        					            (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expbool_node, NULL, (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); ;}
     break;
@@ -2237,7 +2283,7 @@ yyreduce:
   case 56:
 
 /* Line 1455 of yacc.c  */
-#line 504 "nico.y"
+#line 550 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (3)]).first_line, eq_node, "==", NULL);
        					            (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expbool_node, NULL, (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); ;}
     break;
@@ -2245,7 +2291,7 @@ yyreduce:
   case 57:
 
 /* Line 1455 of yacc.c  */
-#line 506 "nico.y"
+#line 552 "nico.y"
     {   Node* n = create_node((yylsp[(1) - (3)]).first_line, ne_node, "<>", NULL);
        					            (yyval.no) = create_node((yylsp[(1) - (3)]).first_line, expbool_node, NULL, (yyvsp[(1) - (3)].no), n, (yyvsp[(3) - (3)].no), NULL); ;}
     break;
@@ -2253,7 +2299,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 2257 "nico.tab.c"
+#line 2303 "nico.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2472,6 +2518,6 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 509 "nico.y"
+#line 555 "nico.y"
 
 
