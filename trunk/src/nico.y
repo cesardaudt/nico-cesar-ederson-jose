@@ -63,12 +63,13 @@
 		    if(extra_info != NULL) {
 		        if(new_entry->extra = malloc(sizeof(int)*(extra_info_pos+1))) {
 		            int i;
+		            //Copy all extra_info content to new_entry->extra
 		            for(i=0; i <= *((int*)new_entry->extra)+1; i++) {
 		                *(((int*)new_entry->extra)+i) = *(((int*)extra_info)+i);
 		            }
 		            //clear extra_info, extra_info_pos vars
-                    free(extra_info);
-                    extra_info_pos = 1;
+                    	free(extra_info);
+                    	extra_info_pos = 1;
 		        }
 		        
 		        else
@@ -279,10 +280,13 @@ tipolista: INT '(' listadupla ')'       {   Node* n1 = create_node(@1.first_line
 						                    Node* n2 = create_node(@1.first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
 						                    $$ = create_node(@1.first_line, tipolista_node, "int", n1, n2, $3, n4, NULL); 
+
 						                    int base = vars_size;
 						                    $$->c = base - ($3->c * INT_SIZE);
 						                    extra_info = realloc(extra_info, sizeof(int)*(extra_info_pos+1));
-                      						*(((int*)extra_info) + extra_info_pos) = $$->c; }
+								  *(((int*)extra_info) + extra_info_pos+1) = $$->c; }
+       
+       
          | DOUBLE '(' listadupla ')'    {   Node* n1 = create_node(@1.first_line, double_node, "double", NULL);
 						                    Node* n2 = create_node(@1.first_line, l_parenteses_node, "(", NULL);
 						                    Node* n4 = create_node(@1.first_line, r_parenteses_node, ")", NULL);
@@ -347,6 +351,7 @@ comando: lvalue '=' expr ';'    {   Node* n2 = create_node(@1.first_line, attr_n
 		           			        }
 		           			        else {
 		           			            char op1[17];
+printf("AQUI TA A PORRA DO OP1: %s\n",op1);
 		           			            strcat(op1, $1->lexeme);
                                         strcat(op1, "(");
 		           			            strcat(op1, $1->deslocamento);
@@ -393,6 +398,7 @@ lvalue: IDF                     {   char *temp = consulta_tabela($1);
 				                    } }
         | listaexpr ']'         {   Node* n2 = create_node(@1.first_line, r_colchetes_node, "]", NULL);
                                     $$ = create_node(@1.first_line, lvalue_node, NULL, $1, n2, NULL);
+
                                     
                                     $$->lexeme = gera_temp(INT_TYPE);
                                     $$->deslocamento = gera_temp(INT_TYPE);
@@ -414,9 +420,11 @@ lvalue: IDF                     {   char *temp = consulta_tabela($1);
 
 listaexpr: IDF '[' expr {   char *temp = consulta_tabela($1);
 		                    if(temp) {
+		                    		Node* n1 = create_node(@1.first_line, idf_node, $1, NULL);
 				                Node* n2 = create_node(@1.first_line, l_colchetes_node, "[", NULL);
-                                $$ = create_node(@1.first_line, listaexpr_node, NULL, $1, n2, $3, NULL);
+                                $$ = create_node(@1.first_line, listaexpr_node, NULL, n1, n2, $3, NULL);
                                 
+
                                 $$->array = $1;
                                 $$->lexeme = $3->lexeme;
                                 $$->ndim = 1;
@@ -426,7 +434,8 @@ listaexpr: IDF '[' expr {   char *temp = consulta_tabela($1);
 		                    else {
 				                printf("UNDEFINED SYMBOL. A variavel %s nao foi declarada.\n", $1);
 					            return( UNDEFINED_SYMBOL_ERROR );
-		                    } }
+		                    } 
+		         }
          | listaexpr ',' expr	{	Node* n = create_node(@1.first_line, comma_node, ",", NULL);
 		       		            	$$ = create_node(@1.first_line, listaexpr_node, NULL, $1, n, $3, NULL); 
 		       		            	
@@ -483,26 +492,30 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
     			        $$ = create_node(@1.first_line, expr_node, $1, n, NULL); }    
     | F_LIT         {   Node* n = create_node(@1.first_line, float_node, $1, NULL); 
     			        $$ = create_node(@1.first_line, expr_node, $1, n, NULL); }    			        
-    | lvalue        {   if($1->deslocamento == NULL) {
-    			            $$->lexeme = $1->lexeme;
+    | lvalue        {   if($1->deslocamento != NULL) {
+				fflush(stdin);
+				char* op2=(char*) malloc(sizeof(int)*27);
+       			        strcat(op2, $1->lexeme);
+       			        printf("l.local: %s\n", $1->lexeme);
+                            	strcat(op2, "(");
+       			        strcat(op2, $1->deslocamento);
+       			        printf("l.deslocamento: %s\n", $1->deslocamento);
+       			        strcat(op2, ")");
+       			        printf("op2: %s\n", op2);
+       			        struct tac* new_tac = create_inst_tac(gera_temp(INT_TYPE),op2, "", "");
+       			        free(op2);
+       			        append_inst_tac(&($1->code),new_tac);
+       			        printf("apendou\n");
     			        }
-    			        else {
-    			            $$->lexeme = gera_temp(INT_TYPE);
-    			            char op2[17];
-       			            strcat(op2, $1->lexeme);
-       			            printf("l.local: %s\n", $1->lexeme);
-                            strcat(op2, "(");
-       			            strcat(op2, $1->deslocamento);
-       			            printf("l.deslocamento: %s\n", $1->deslocamento);
-       			            strcat(op2, ")");
-       			            printf("op2: %s\n", op2);
-    			            struct tac* new_tac = create_inst_tac($$->lexeme,op2, "", "");
-    			            cat_tac(&($$->code), &($1->code));
-    			            append_inst_tac(&($$->code),new_tac);
-    			            printf("apendou\n");
-    			        }
-    			        $$ = $1; 
-    			        $$->type = expr_node; }
+    			 $$ = $1; 
+    			 $$->type = expr_node; }
+    			        
+    			        
+    			            			        
+    			        
+    			        
+    			        
+    			        
     //TODO: REGRAS SEMANTICAS NAO CRIADAS NESSA ETAPA
     | chamaproc     {   $$ = $1; 
     			        /*$$->type = expr_node;*/}
