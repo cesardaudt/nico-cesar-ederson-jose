@@ -492,8 +492,8 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
     			        $$ = create_node(@1.first_line, expr_node, $1, n, NULL); }    
     | F_LIT         {   Node* n = create_node(@1.first_line, float_node, $1, NULL); 
     			        $$ = create_node(@1.first_line, expr_node, $1, n, NULL); }    			        
+    
     | lvalue        {   if($1->deslocamento != NULL) {
-				fflush(stdin);
 				char* op2=(char*) malloc(sizeof(int)*27);
        			        strcat(op2, $1->lexeme);
        			        printf("l.local: %s\n", $1->lexeme);
@@ -502,7 +502,8 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
        			        printf("l.deslocamento: %s\n", $1->deslocamento);
        			        strcat(op2, ")");
        			        printf("op2: %s\n", op2);
-       			        struct tac* new_tac = create_inst_tac(gera_temp(INT_TYPE),op2, "", "");
+       			        $1->lexeme = gera_temp(INT_TYPE);
+       			        struct tac* new_tac = create_inst_tac($1->lexeme,op2, "", "");
        			        free(op2);
        			        append_inst_tac(&($1->code),new_tac);
        			        printf("apendou\n");
@@ -510,7 +511,7 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
     			 $$ = $1; 
     			 $$->type = expr_node; }
     			        
-    			        
+    
     			            			        
     			        
     			        
