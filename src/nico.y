@@ -61,20 +61,11 @@
 
             //this code is just used in multi-dimensional arrays		    
 		    if(extra_info != NULL) {
-		        if(new_entry->extra = malloc(sizeof(int)*(extra_info_pos+1))) {
-		            int i;
 		            //Copy all extra_info content to new_entry->extra
-		            for(i=0; i <= *((int*)new_entry->extra)+1; i++) {
-		                *(((int*)new_entry->extra)+i) = *(((int*)extra_info)+i);
-		            }
+		            new_entry->extra = extra_info;
 		            //clear extra_info, extra_info_pos vars
-                    	free(extra_info);
                     	extra_info = NULL;
                     	extra_info_pos = 1;
-		        }
-		        
-		        else
-		            exit(0);
 		    }
 
 		    switch(tipo_idf){
@@ -285,7 +276,7 @@ tipolista: INT '(' listadupla ')'       {   Node* n1 = create_node(@1.first_line
 						                    int base = vars_size;
 						                    $$->c = base - ($3->c * INT_SIZE);
 						                    extra_info = realloc(extra_info, sizeof(int)*(extra_info_pos+1));
-								  *(((int*)extra_info) + extra_info_pos+1) = $$->c; }
+								  *(((int*)extra_info) + extra_info_pos) = $$->c; }
        
        
          | DOUBLE '(' listadupla ')'    {   Node* n1 = create_node(@1.first_line, double_node, "double", NULL);
@@ -302,7 +293,11 @@ tipolista: INT '(' listadupla ')'       {   Node* n1 = create_node(@1.first_line
 						                    $$ = create_node(@1.first_line, tipolista_node, "char", n1, n2, $3, n4, NULL); }
          ;
 
-listadupla: INT_LIT ':' INT_LIT                 {	//TODO: check wether up_limit >= low_limit and both > 0
+listadupla: INT_LIT ':' INT_LIT                 {	//TODO: check wether up_limit >= low_limit and both > 0 (in a better way)
+							//if((atoi($3)<atoi($1))||atoi($3)<=0||atoi($1)<=0){
+							//	printf("Dimensoes de arrays invalida: %d:%d\n",atoi($1),atoi($3));
+							//	exit(0);
+							//}
                                                     Node* n1 = create_node(@1.first_line, int_lit_node, $1, NULL);
                               						Node* n2 = create_node(@1.first_line, colon_node, ":", NULL);
                               						Node* n3 = create_node(@1.first_line, int_lit_node, $3, NULL);
@@ -317,7 +312,11 @@ listadupla: INT_LIT ':' INT_LIT                 {	//TODO: check wether up_limit 
                               						*((int*)extra_info) = 1;                    //#dimensions is, at least, 1
                               						*(((int*)extra_info)+extra_info_pos) = $$->n; //#elements at last dimension
                               						extra_info_pos++; }
-          | INT_LIT ':' INT_LIT ',' listadupla	{	//TODO: check wether up_limit >= low_limit and both > 0
+          | INT_LIT ':' INT_LIT ',' listadupla	{	//TODO: check wether up_limit >= low_limit and both > 0 (in a better way)
+							//if((atoi($3)<atoi($1))||atoi($3)<=0||atoi($1)<=0){
+							//	printf("Dimensoes de arrays invalida: %d:%d\n",atoi($1),atoi($3));
+							//	exit(0);
+							//}          
                                                     Node* n1 = create_node(@1.first_line, int_lit_node, $1, NULL);
                               						Node* n2 = create_node(@1.first_line, colon_node, ":", NULL);
                               						Node* n3 = create_node(@1.first_line, int_lit_node, $3, NULL);
@@ -360,7 +359,8 @@ comando: lvalue '=' expr ';'    {   Node* n2 = create_node(@1.first_line, attr_n
                                         struct tac* new_tac = create_inst_tac(op1,$3->lexeme,"","");
       			        			    cat_tac(&($1->code), &($3->code));
 		           			            append_inst_tac(&($1->code),new_tac);
-		           			            cat_tac(&($$->code), &($1->code)); 
+		           			            cat_tac(&($$->code), &($1->code));
+		           			            free(op1);
 		           			        } }
        | lvalue SWAP lvalue ';' {   Node* n2 = create_node(@1.first_line, swap_node, "<=>", NULL);
                    					Node* n4 = create_node(@1.first_line, semicolon_node, ";", NULL);
@@ -384,7 +384,7 @@ comando: lvalue '=' expr ';'    {   Node* n2 = create_node(@1.first_line, attr_n
                    					$$ = create_node(@1.first_line, comando_node, NULL, n1, $2, n3, NULL);
                  					
                    					struct tac* new_tac = create_inst_tac("",$2->lexeme,"PRINT","");
-       			        			//cat_tac(&($$->code), &($2->code));
+       			        			cat_tac(&($$->code), &($2->code));
 			       			        append_inst_tac(&($$->code),new_tac); }
        ;
 
@@ -407,12 +407,14 @@ lvalue: IDF                     {   char *temp = consulta_tabela($1);
                                     int c = foo_c($1->array);
                                     //sprintf(str,"%d",value) converts to decimal base.
                                     char c_str[100];
+                                    c_str[0]='\0';
                                     sprintf(c_str, "%d", c);
                                     struct tac* new_tac1 = create_inst_tac($$->lexeme,c_str,"","");
 
                                     int largura = foo_largura($1->array);
                                     //sprintf(str,"%d",value) converts to decimal base.
                                     char largura_str[100];
+                                    largura_str[0]='\0';
                                     sprintf(largura_str, "%d", largura);
                                     struct tac* new_tac2 = create_inst_tac($$->deslocamento,$1->lexeme,"MUL",largura_str);
                                     cat_tac(&($$->code), &($1->code));
@@ -507,8 +509,8 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
 //       			        printf("op2: %s\n", op2);
        			        $1->lexeme = gera_temp(INT_TYPE);
        			        struct tac* new_tac = create_inst_tac($1->lexeme,op2, "", "");
-       			        free(op2);
        			        append_inst_tac(&($1->code),new_tac);
+       			        free(op2);       			        
 //       			        printf("apendou\n");
     			        }
     			 $$ = $1; 
