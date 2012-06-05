@@ -1,3 +1,4 @@
+
 /** @file symbol_table.c
  * \version 1
  * \author Daniel Beck

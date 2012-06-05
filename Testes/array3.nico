@@ -1,0 +1,8 @@
+int : z;
+int : x;
+int : i;
+int : j;
+int (0:10, 5:20) : a1;
+a1[8,19] = 1;
+z = a1[8,19];
+print z;

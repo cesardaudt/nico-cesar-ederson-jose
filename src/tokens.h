@@ -76,7 +76,7 @@ typedef union YYSTYPE
 {
 
 /* Line 2068 of yacc.c  */
-#line 157 "nico.y"
+#line 148 "nico.y"
 
   char* cadeia;
   struct _node * no;
