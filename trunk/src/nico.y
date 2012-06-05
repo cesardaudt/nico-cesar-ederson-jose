@@ -69,6 +69,7 @@
 		            }
 		            //clear extra_info, extra_info_pos vars
                     	free(extra_info);
+                    	extra_info = NULL;
                     	extra_info_pos = 1;
 		        }
 		        
@@ -350,15 +351,16 @@ comando: lvalue '=' expr ';'    {   Node* n2 = create_node(@1.first_line, attr_n
 		           			            append_inst_tac(&($$->code),new_tac); 
 		           			        }
 		           			        else {
-		           			            char op1[17];
-printf("AQUI TA A PORRA DO OP1: %s\n",op1);
+		           			            char* op1 = (char*) malloc(sizeof(int)*27);
+		           			            op1[0]='\0';
 		           			            strcat(op1, $1->lexeme);
                                         strcat(op1, "(");
 		           			            strcat(op1, $1->deslocamento);
 		           			            strcat(op1, ")");
                                         struct tac* new_tac = create_inst_tac(op1,$3->lexeme,"","");
-      			        			    cat_tac(&($$->code), &($3->code));
-		           			            append_inst_tac(&($$->code),new_tac); 
+      			        			    cat_tac(&($1->code), &($3->code));
+		           			            append_inst_tac(&($1->code),new_tac);
+		           			            cat_tac(&($$->code), &($1->code)); 
 		           			        } }
        | lvalue SWAP lvalue ';' {   Node* n2 = create_node(@1.first_line, swap_node, "<=>", NULL);
                    					Node* n4 = create_node(@1.first_line, semicolon_node, ";", NULL);
@@ -495,18 +497,19 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
     
     | lvalue        {   if($1->deslocamento != NULL) {
 				char* op2=(char*) malloc(sizeof(int)*27);
+				op2[0]='\0';
        			        strcat(op2, $1->lexeme);
-       			        printf("l.local: %s\n", $1->lexeme);
+//       			        printf("l.local: %s\n", $1->lexeme);
                             	strcat(op2, "(");
        			        strcat(op2, $1->deslocamento);
-       			        printf("l.deslocamento: %s\n", $1->deslocamento);
+//       			        printf("l.deslocamento: %s\n", $1->deslocamento);
        			        strcat(op2, ")");
-       			        printf("op2: %s\n", op2);
+//       			        printf("op2: %s\n", op2);
        			        $1->lexeme = gera_temp(INT_TYPE);
        			        struct tac* new_tac = create_inst_tac($1->lexeme,op2, "", "");
        			        free(op2);
        			        append_inst_tac(&($1->code),new_tac);
-       			        printf("apendou\n");
+//       			        printf("apendou\n");
     			        }
     			 $$ = $1; 
     			 $$->type = expr_node; }
