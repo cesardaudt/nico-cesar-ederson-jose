@@ -104,11 +104,11 @@ void append_inst_tac(struct node_tac ** code, struct tac * inst){
 		new_inst->prev = NULL;
 	}
 	else{
-	    printf("else_in\n");
+//	    printf("else_in\n");
 		struct node_tac * tac_pointer;
 		tac_pointer=code[0];
 		while(tac_pointer->next){
-		    printf("malocou\n");
+//		    printf("malocou\n");
 			tac_pointer=tac_pointer->next;
 		}
 		tac_pointer->next = new_inst;
