@@ -493,6 +493,7 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
     			        $$ = create_node(@1.first_line, expr_node, $1, n, NULL); }    			        
     | lvalue        {   if($1->deslocamento != NULL) {
 				char op2[17];
+				op2 = "";
        			        strcat(op2, $1->lexeme);
        			        printf("l.local: %s\n", $1->lexeme);
                             	strcat(op2, "(");
