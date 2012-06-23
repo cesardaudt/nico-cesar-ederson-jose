@@ -349,7 +349,30 @@ comando: lvalue '=' expr ';'    {   Node* n2 = create_node(@1.first_line, attr_n
       			        			    cat_tac(&($$->code), &($3->code));
 		           			            append_inst_tac(&($$->code),new_tac); 
 		           			        }
+
+//ALTERACAO QUE JULGO NECESSARIA NO ELSE ABAIXO
 		           			        else {
+		           			            char* t = gera_temp(INT_TYPE);
+		           			            struct tac* new_tac = create_inst_tac(t,$1->lexeme,"ADD",$1->deslocamento);
+		           			            
+		           			            
+		           			            char* op1 = (char*) malloc(sizeof(int)*27);
+		           			            op1[0]='\0';
+		           			            strcat(op1, t);
+                                        		    strcat(op1, "(SP)");
+
+                                        struct tac* new_tac2 = create_inst_tac(op1,$3->lexeme,"","");
+      			        			    cat_tac(&($1->code), &($3->code));
+		           			            append_inst_tac(&($1->code),new_tac);
+		           			            append_inst_tac(&($1->code),new_tac2);
+		           			            cat_tac(&($$->code), &($1->code));
+		           			            free(op1);
+		           			        }
+
+
+
+
+		           			        /*else {
 		           			            char* op1 = (char*) malloc(sizeof(int)*27);
 		           			            op1[0]='\0';
 		           			            strcat(op1, $1->lexeme);
@@ -361,7 +384,11 @@ comando: lvalue '=' expr ';'    {   Node* n2 = create_node(@1.first_line, attr_n
 		           			            append_inst_tac(&($1->code),new_tac);
 		           			            cat_tac(&($$->code), &($1->code));
 		           			            free(op1);
-		           			        } }
+		           			        } 
+		           			        
+		           			        */
+		           			        
+		           			        }
        | lvalue SWAP lvalue ';' {   Node* n2 = create_node(@1.first_line, swap_node, "<=>", NULL);
                    					Node* n4 = create_node(@1.first_line, semicolon_node, ";", NULL);
                    					$$ = create_node(@1.first_line, comando_node, NULL, $1, n2, $3, n4, NULL); 
@@ -497,22 +524,46 @@ expr: expr '+' expr {	Node* n = create_node(@1.first_line, add_node, "+", NULL);
     | F_LIT         {   Node* n = create_node(@1.first_line, float_node, $1, NULL); 
     			        $$ = create_node(@1.first_line, expr_node, $1, n, NULL); }    			        
     
-    | lvalue        {   if($1->deslocamento != NULL) {
+    | lvalue        {   if($1->deslocamento != NULL)     
+
+//SEGUNDA ALTERACAO QUE JULGUEI NECESSARIO, O COMANDO ENTRE CHAVES SUBSTITUI A AREA COMENTADA ABAIXO
+    				{
+    				char* t = gera_temp(INT_TYPE);
+		           	struct tac* new_tac = create_inst_tac(t,$1->lexeme,"ADD",$1->deslocamento);
+    				
+    				char* op2=(char*) malloc(sizeof(int)*27);
+				op2[0]='\0';
+       			        strcat(op2, t);
+
+                            	strcat(op2, "(SP)");
+       			        
+       			        $1->lexeme = gera_temp(INT_TYPE);
+       			        struct tac* new_tac2 = create_inst_tac($1->lexeme,op2, "", "");
+       			        append_inst_tac(&($1->code),new_tac);
+       			        append_inst_tac(&($1->code),new_tac2);
+       			        free(op2);       			        
+
+    			        }
+    
+    
+    
+    /*{
 				char* op2=(char*) malloc(sizeof(int)*27);
 				op2[0]='\0';
        			        strcat(op2, $1->lexeme);
-//       			        printf("l.local: %s\n", $1->lexeme);
+
                             	strcat(op2, "(");
        			        strcat(op2, $1->deslocamento);
-//       			        printf("l.deslocamento: %s\n", $1->deslocamento);
+
        			        strcat(op2, ")");
-//       			        printf("op2: %s\n", op2);
+
        			        $1->lexeme = gera_temp(INT_TYPE);
        			        struct tac* new_tac = create_inst_tac($1->lexeme,op2, "", "");
        			        append_inst_tac(&($1->code),new_tac);
        			        free(op2);       			        
-//       			        printf("apendou\n");
+
     			        }
+    */    			        
     			 $$ = $1; 
     			 $$->type = expr_node; }
     			        
