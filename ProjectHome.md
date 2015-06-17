@@ -1,0 +1,1 @@
+Nico is a compiler to the LAS language. This is the main project of Compilers Course at UFRGS' Informatics Institute
